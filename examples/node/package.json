@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,10 +12,17 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "tsx": "^4",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "@stripe-for-web3/sdk": "file:..\\..\\stripe-for-web3-sdk-0.1.0.tgz",
-    "dotenv": "^17.4.2"
+    "@zerodev/sdk": "^5",
+    "@zerodev/ecdsa-validator": "^5",
+    "permissionless": "^0.1",
+    "dotenv": "^17",
+    "viem": "^2"
   }
 }
+
+

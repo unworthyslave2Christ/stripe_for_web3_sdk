@@ -94,3 +94,6 @@ export class StripeForWeb3 {
     });
   }
 }
+
+
+// I think this redesign is the right direction. The SDK should become protocol-centric, not application-centric. It should know about wallets, public clients, chains, and the Billing Contract—nothing about your database, API, merchants, or customers.
