@@ -1,219 +1,138 @@
-import {
-    createKernelAccountClient,
-    createZeroDevPaymasterClient,
-    // deserializePermissionAccount,
-    // getEntryPoint,
-    // KERNEL_V3_3,
-    // toECDSASigner,
-} from "@zerodev/sdk";
+// import {
+//   createKernelAccountClient,
+//   createZeroDevPaymasterClient,
+// } from "@zerodev/sdk";
 
+// import { privateKeyToAccount } from "viem/accounts";
 
+// import { http, type Address, type PublicClient, type WalletClient } from "viem";
 
-import {
-    privateKeyToAccount,
-} from "viem/accounts";
+// import { arbitrumSepolia } from "viem/chains";
+// import { deserializePermissionAccount } from "@zerodev/permissions";
+// import { getEntryPoint, KERNEL_V3_3 } from "@zerodev/sdk/constants";
 
-import {
-    http,
-    type Address,
-    type PublicClient,
-    type WalletClient,
-} from "viem";
+// import { toECDSASigner } from "@zerodev/permissions/signers";
 
-import {
-    arbitrumSepolia,
-} from "viem/chains";
-import { deserializePermissionAccount } from "@zerodev/permissions";
-import { getEntryPoint, KERNEL_V3_3 } from "@zerodev/sdk/constants";
+// const chain = arbitrumSepolia;
 
-import { toECDSASigner } from "@zerodev/permissions/signers";
+// const entryPoint = getEntryPoint("0.7");
 
-const chain = arbitrumSepolia;
+// const kernelVersion = KERNEL_V3_3;
 
-const entryPoint = getEntryPoint("0.7");
+// const paymasterClient = createZeroDevPaymasterClient({
+//   chain,
 
-const kernelVersion = KERNEL_V3_3;
+//   transport: http(process.env.PAYMASTER_RPC!),
+// });
 
-const paymasterClient =
-    createZeroDevPaymasterClient({
+// export interface CustomerKernel {
+//   customer: any;
 
-        chain,
+//   kernel: any;
 
-        transport: http(
-            process.env.PAYMASTER_RPC!,
-        ),
+//   kernelClient: any;
 
-    });
+//   permissionId: bigint;
 
-export interface CustomerKernel {
+//   permission: any;
+// }
 
-    customer: any;
+// export interface CustomerResolverResult {
+//   customer: any;
 
-    kernel: any;
+//   serializedPermissionAccount: string;
 
-    kernelClient: any;
+//   sessionPrivateKey: Address;
 
-    permissionId: bigint;
+//   permissionId: bigint;
 
-    permission: any;
+//   permission: any;
+// }
 
-}
+// export type CustomerResolver = (
+//   wallet: Address,
+// ) => Promise<CustomerResolverResult>;
 
-export interface CustomerResolverResult {
+// export interface GetCustomerKernelParams {
+//   walletClient: WalletClient;
 
-    customer: any;
+//   publicClient: PublicClient;
 
-    serializedPermissionAccount: string;
+//   // customerResolver: CustomerResolver;
+// }
 
-    sessionPrivateKey: Address;
+// export async function getCustomerKernel({
+//   walletClient,
 
-    permissionId: bigint;
+//   publicClient,
 
-    permission: any;
+//   // customerResolver,
+// }: GetCustomerKernelParams): Promise<CustomerKernel> {
+//   const [wallet] = await walletClient.getAddresses();
 
-}
+//   let {
+//     customer,
 
-export type CustomerResolver = (
+//     serializedPermissionAccount,
 
-    wallet: Address,
+//     sessionPrivateKey,
 
-) => Promise<CustomerResolverResult>;
+//     permissionId,
 
-export interface GetCustomerKernelParams {
+//     permission,
+//   } = await customerResolver(wallet);
 
-    walletClient: WalletClient;
+//   customer = {
+//     ...customer,
 
-    publicClient: PublicClient;
+//     smartAccount: customer.smart_account,
+//   };
 
-    customerResolver: CustomerResolver;
+//   const signer = await toECDSASigner({
+//     signer: privateKeyToAccount(sessionPrivateKey),
+//   });
 
-}
+//   const kernel = await deserializePermissionAccount(
+//     publicClient,
 
-export async function getCustomerKernel({
+//     entryPoint,
 
-    walletClient,
+//     kernelVersion,
 
-    publicClient,
+//     serializedPermissionAccount,
 
-    customerResolver,
+//     signer,
+//   );
 
-}: GetCustomerKernelParams): Promise<CustomerKernel> {
+//   if (kernel.address.toLowerCase() !== customer.smartAccount.toLowerCase()) {
+//     throw new Error("Kernel verification failed.");
+//   }
 
-    const [wallet] =
-        await walletClient.getAddresses();
+//   const kernelClient = createKernelAccountClient({
+//     account: kernel,
 
-    let {
+//     chain,
 
-        customer,
+//     bundlerTransport: http(process.env.BUNDLER_RPC!),
 
-        serializedPermissionAccount,
+//     paymaster: {
+//       async getPaymasterData(userOperation) {
+//         return paymasterClient.sponsorUserOperation({
+//           userOperation,
+//         });
+//       },
+//     },
+//   });
 
-        sessionPrivateKey,
+//   return {
+//     customer,
 
-        permissionId,
+//     kernel,
 
-        permission,
+//     kernelClient,
 
-    } = await customerResolver(wallet);
+//     permissionId,
 
-    customer = {
-
-        ...customer,
-
-        smartAccount:
-            customer.smart_account,
-
-    };
-
-    const signer =
-        await toECDSASigner({
-
-            signer:
-                privateKeyToAccount(
-
-                    sessionPrivateKey,
-
-                ),
-
-        });
-
-    const kernel =
-        await deserializePermissionAccount(
-
-            publicClient,
-
-            entryPoint,
-
-            kernelVersion,
-
-            serializedPermissionAccount,
-
-            signer,
-
-        );
-
-    if (
-
-        kernel.address.toLowerCase() !==
-
-        customer.smartAccount.toLowerCase()
-
-    ) {
-
-        throw new Error(
-
-            "Kernel verification failed.",
-
-        );
-
-    }
-
-    const kernelClient =
-        createKernelAccountClient({
-
-            account: kernel,
-
-            chain,
-
-            bundlerTransport: http(
-
-                process.env.BUNDLER_RPC!,
-
-            ),
-
-            paymaster: {
-
-                async getPaymasterData(
-
-                    userOperation,
-
-                ) {
-
-                    return paymasterClient
-                        .sponsorUserOperation({
-
-                            userOperation,
-
-                        });
-
-                },
-
-            },
-
-        });
-
-    return {
-
-        customer,
-
-        kernel,
-
-        kernelClient,
-
-        permissionId,
-
-        permission,
-
-    };
-
-}
+//     permission,
+//   };
+// }

@@ -1,6 +1,6 @@
 {
   "name": "@stripe-for-web3/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Official TypeScript SDK for integrating 'Stripe for Web3' decentralized recurring subscription billing into any application.",
   "license": "MIT",
   "author": "Stripe for Web3",
@@ -37,7 +37,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "build": "tsup src/index.ts --format esm,cjs",
     "dev": "tsup --watch --config tsup.config.ts",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts",

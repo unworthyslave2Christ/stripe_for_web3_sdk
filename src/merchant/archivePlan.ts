@@ -2,148 +2,298 @@
 
 import type { MerchantClient } from "./MerchantClient";
 
-import type { PlanRecord } from "../types/Plan";
+import type { PlanMirrorResponse, PlanRecord } from "../types/Plan";
 
-import {
-    getMerchantKernel,
-} from "../kernels/getMerchantKernel";
+import { getMerchantKernel } from "../kernels/getMerchantKernel";
 
-import {
-    encodeBillingProtocolCall,
-} from "../contracts/encode";
+import { encodeBillingProtocolCall } from "../contracts/encode";
 
-import {
-    executeUserOperation,
-} from "../internal/executeUserOperation";
+import { executeUserOperation } from "../internal/executeUserOperation";
 
-import {
-    waitForReceipt,
-} from "../internal/waitForReceipt";
+import { waitForReceipt } from "../internal/waitForReceipt";
 
-import {
-    mirror,
-} from "../internal/mirror";
+import { mirror } from "../internal/mirror";
+
+////////////////////////////////////////////////////////////
+// INPUT
+////////////////////////////////////////////////////////////
 
 export interface ArchivePlanParams {
+  /**
+   * Merchant SDK client.
+   *
+   * Contains the connected wallet, public client,
+   * Billing Protocol address and API URL.
+   */
+  client: MerchantClient;
 
-    client: MerchantClient;
-
-    plan: PlanRecord;
-
+  /**
+   * Canonical plan to archive.
+   */
+  plan: PlanRecord;
 }
 
+////////////////////////////////////////////////////////////
+// RESULT
+////////////////////////////////////////////////////////////
+
+export interface ArchivePlanResult {
+  /**
+   * Canonical plan returned by the backend.
+   */
+  plan: PlanRecord;
+
+  /**
+   * Kernel UserOperation hash.
+   */
+  userOperationHash: `0x${string}`;
+
+  /**
+   * Underlying transaction hash, when available.
+   */
+  transactionHash?: `0x${string}`;
+
+  /**
+   * UserOperation receipt.
+   */
+  receipt: any;
+}
+
+////////////////////////////////////////////////////////////
+// ARCHIVE PLAN
+////////////////////////////////////////////////////////////
+
+/**
+ * Archives an existing billing plan.
+ *
+ * Workflow:
+ *
+ * 1. Resolve the connected merchant.
+ * 2. Resolve the merchant Kernel.
+ * 3. Verify that the connected wallet corresponds to
+ *    the merchant Kernel.
+ * 4. Encode archivePlan(planId).
+ * 5. Execute the operation through the merchant Kernel.
+ * 6. Wait for the UserOperation receipt.
+ * 7. Mirror the ARCHIVED status to the backend.
+ * 8. Return the canonical PlanRecord.
+ *
+ * MerchantResolver is deliberately not used.
+ */
 export async function archivePlan({
+  client,
+  plan,
+}: ArchivePlanParams): Promise<ArchivePlanResult> {
+  ////////////////////////////////////////////////////////////
+  // CONFIGURATION
+  ////////////////////////////////////////////////////////////
 
-    client,
+  if (!client.contractAddress) {
+    throw new Error("Billing Protocol contract address is not configured.");
+  }
 
-    plan,
+  if (!client.apiUrl) {
+    throw new Error("Merchant API URL is not configured.");
+  }
 
-}: ArchivePlanParams) {
+  const contractAddress = client.contractAddress;
 
-    ////////////////////////////////////////////////////////////
-    // Obtain Merchant Kernel
-    ////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // RESOLVE MERCHANT + KERNEL
+  ////////////////////////////////////////////////////////////
 
-    const {
+  /*
+   * The merchant already exists.
+   *
+   * getMerchantKernel() resolves the existing merchant
+   * and reconstructs its Kernel from the connected wallet.
+   *
+   * No MerchantResolver is required.
+   */
+  const { merchant, kernel } = await getMerchantKernel({
+    walletClient: client.walletClient,
 
-        kernel,
+    publicClient: client.publicClient,
+  });
 
-    } = await getMerchantKernel({
+  ////////////////////////////////////////////////////////////
+  // SAFETY CHECK
+  ////////////////////////////////////////////////////////////
 
-        walletClient: client.walletClient,
+  if (kernel.address.toLowerCase() !== merchant.smartAccount.toLowerCase()) {
+    throw new Error("Connected wallet does not own the merchant Kernel.");
+  }
 
-        publicClient: client.publicClient,
+  ////////////////////////////////////////////////////////////
+  // VALIDATION
+  ////////////////////////////////////////////////////////////
 
-        merchantResolver: client.merchantResolver,
+  if (!Number.isInteger(plan.planId) || plan.planId <= 0) {
+    throw new Error("Invalid plan ID.");
+  }
 
-    });
+  ////////////////////////////////////////////////////////////
+  // ENCODE archivePlan()
+  ////////////////////////////////////////////////////////////
 
-    const kernelClient = kernel.client;
+  const data = encodeBillingProtocolCall("archivePlan", [BigInt(plan.planId)]);
 
-    ////////////////////////////////////////////////////////////
-    // Encode Billing Protocol Call
-    ////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // EXECUTE USER OPERATION
+  ////////////////////////////////////////////////////////////
 
-    const data = encodeBillingProtocolCall(
+  const userOperationHash = await executeUserOperation({
+    kernel,
 
-        "archivePlan",
+    kernelClient: kernel.client,
 
-        [
+    contractAddress,
 
-            BigInt(plan.planId),
+    data,
+  });
 
-        ],
+  ////////////////////////////////////////////////////////////
+  // WAIT FOR RECEIPT
+  ////////////////////////////////////////////////////////////
 
-    );
+  const receipt = await waitForReceipt({
+    kernelClient: kernel.client,
 
-    ////////////////////////////////////////////////////////////
-    // Execute User Operation
-    ////////////////////////////////////////////////////////////
+    userOperationHash,
+  });
 
-    const userOpHash = await executeUserOperation({
+  ////////////////////////////////////////////////////////////
+  // VERIFY RECEIPT
+  ////////////////////////////////////////////////////////////
 
-        kernel,
+  if (receipt?.status && receipt.status !== "success") {
+    throw new Error("Plan archive transaction failed.");
+  }
 
-        kernelClient,
+  ////////////////////////////////////////////////////////////
+  // MIRROR BACKEND
+  ////////////////////////////////////////////////////////////
 
-        contractAddress: client.contractAddress!,
+  const mirrored = await mirror({
+    apiUrl: client.apiUrl,
 
-        data,
+    endpoint: `/api/v1/plans/${plan.planId}/archive`,
 
-    });
+    body: {
+      planId: plan.planId,
 
-    ////////////////////////////////////////////////////////////
-    // Wait For Receipt
-    ////////////////////////////////////////////////////////////
+      merchantId: merchant.merchantId,
 
-    const receipt = await waitForReceipt({
+      status: "ARCHIVED",
+    },
+  }) as PlanMirrorResponse;
 
-        kernelClient,
+  ////////////////////////////////////////////////////////////
+  // NORMALIZE PLAN
+  ////////////////////////////////////////////////////////////
 
-        userOperationHash: userOpHash,
+  const archivedPlan = normalizePlan(
+    mirrored.plan ??
+      mirrored ?? {
+        ...plan,
+        status: "ARCHIVED",
+      },
+  );
 
-    });
+  ////////////////////////////////////////////////////////////
+  // TRANSACTION HASH
+  ////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////
-    // Mirror Backend
-    ////////////////////////////////////////////////////////////
+  const transactionHash = extractTransactionHash(receipt);
 
-    await mirror({
+  ////////////////////////////////////////////////////////////
+  // RETURN
+  ////////////////////////////////////////////////////////////
 
-        apiUrl: client.apiUrl,
+  return {
+    plan: archivedPlan,
 
-        endpoint: `/plans/${plan.planId}/archive`,
+    userOperationHash,
 
-        body: {
+    transactionHash,
 
-            planId: plan.planId,
+    receipt,
+  };
+}
 
-            status: "ARCHIVED",
+////////////////////////////////////////////////////////////
+// NORMALIZATION
+////////////////////////////////////////////////////////////
 
-        },
+function normalizePlan(input: any): PlanRecord {
+  return {
+    planId: Number(input.planId ?? input.plan_id),
 
-    });
+    merchantId: Number(input.merchantId ?? input.merchant_id),
 
-    ////////////////////////////////////////////////////////////
-    // Return
-    ////////////////////////////////////////////////////////////
+    paymentToken: input.paymentToken ?? input.payment_token,
 
-    return {
+    amount: BigInt(input.amount),
 
-        plan: {
+    billingIntervalSeconds: Number(
+      input.billingIntervalSeconds ?? input.billing_interval_seconds,
+    ),
 
-            ...plan,
+    billingPeriodNamed: input.billingPeriodNamed ?? input.billing_period_named,
 
-            status: "ARCHIVED",
+    trialPeriod: Number(input.trialPeriod ?? input.trial_period ?? 0),
 
-        },
+    trialPeriodNamed:
+      input.trialPeriodNamed ?? input.trial_period_named ?? "NONE",
 
-        kernel,
+    name: input.name,
 
-        userOpHash,
+    status: input.status ?? "ARCHIVED",
 
-        receipt,
+    maxSubscribers: Number(input.maxSubscribers ?? input.max_subscribers ?? 0),
 
-    };
+    allowRenewal: input.allowRenewal ?? input.allow_renewal ?? true,
 
+    metadataURI: input.metadataURI ?? input.metadata_uri ?? "",
+
+    createdAt: normalizeDate(input.createdAt ?? input.created_at),
+
+    updatedAt: normalizeDate(input.updatedAt ?? input.updated_at),
+  };
+}
+
+////////////////////////////////////////////////////////////
+// DATE NORMALIZATION
+////////////////////////////////////////////////////////////
+
+function normalizeDate(value: unknown): Date {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return new Date(value);
+  }
+
+  if (typeof value === "number") {
+    return new Date(value);
+  }
+
+  return new Date();
+}
+
+////////////////////////////////////////////////////////////
+// TRANSACTION HASH
+////////////////////////////////////////////////////////////
+
+function extractTransactionHash(receipt: any): `0x${string}` | undefined {
+  /*
+   * ZeroDev versions can expose the underlying
+   * transaction receipt differently.
+   *
+   * Never fabricate a transaction hash.
+   */
+  const hash = receipt?.receipt?.transactionHash ?? receipt?.transactionHash;
+
+  return hash as `0x${string}` | undefined;
 }

@@ -1,58 +1,114 @@
 import "dotenv/config";
 
-import { createPublicClient, createWalletClient, http } from "viem";
+import {
+    createPublicClient,
+    createWalletClient,
+    http,
+} from "viem";
 
-import { privateKeyToAccount } from "viem/accounts";
+import {
+    privateKeyToAccount,
+    generatePrivateKey
+} from "viem/accounts";
 
-import { arbitrumSepolia } from "viem/chains";
+import {
+    arbitrumSepolia,
+} from "viem/chains";
 
-import { StripeForWeb3 } from "@stripe-for-web3/sdk";
+import {
+    StripeForWeb3,
+} from "@stripe-for-web3/sdk";
 
-const account = privateKeyToAccount(
-    process.env.PRIVATE_KEY as `0x${string}`,
-);
+////////////////////////////////////////////////////////////
+// ENVIRONMENT
+////////////////////////////////////////////////////////////
 
-export const publicClient = createPublicClient({
+const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
+const rpcUrl =
+    process.env.RPC_URL;
 
-    chain: arbitrumSepolia,
+const billingContract =
+    process.env.BILLING_CONTRACT as `0x${string}`;
 
-    transport: http(process.env.RPC_URL),
+const apiUrl =
+    process.env.API_URL;
 
-});
+if (!privateKey) {
+    throw new Error(
+        "PRIVATE_KEY is not configured.",
+    );
+}
 
-export const walletClient = createWalletClient({
+if (!rpcUrl) {
+    throw new Error(
+        "RPC_URL is not configured.",
+    );
+}
 
-    account,
+if (!billingContract) {
+    throw new Error(
+        "BILLING_CONTRACT is not configured.",
+    );
+}
 
-    chain: arbitrumSepolia,
+if (!apiUrl) {
+    throw new Error(
+        "API_URL is not configured.",
+    );
+}
 
-    transport: http(process.env.RPC_URL),
+////////////////////////////////////////////////////////////
+// ACCOUNT
+////////////////////////////////////////////////////////////
 
-});
+export const account =
+    privateKeyToAccount(
+        privateKey,
+    );
 
-export const stripe = new StripeForWeb3({
+////////////////////////////////////////////////////////////
+// PUBLIC CLIENT
+////////////////////////////////////////////////////////////
 
-    walletClient,
+export const publicClient =
+    createPublicClient({
+        chain:
+            arbitrumSepolia,
 
-    publicClient,
+        transport:
+            http(rpcUrl),
+    });
 
-    chain: arbitrumSepolia,
+////////////////////////////////////////////////////////////
+// WALLET CLIENT
+////////////////////////////////////////////////////////////
 
-    contractAddress:
-        process.env.BILLING_CONTRACT as `0x${string}`,
+export const walletClient =
+    createWalletClient({
+        account,
 
-    apiUrl: process.env.API_URL,
+        chain:
+            arbitrumSepolia,
 
-    merchantResolver: async () => {
+        transport:
+            http(rpcUrl),
+    });
 
-        throw new Error("Implement merchantResolver.");
+////////////////////////////////////////////////////////////
+// STRIPE FOR WEB3
+////////////////////////////////////////////////////////////
 
-    },
+export const stripe =
+    new StripeForWeb3({
+        walletClient,
 
-    customerResolver: async () => {
+        publicClient,
 
-        throw new Error("Implement customerResolver.");
+        chain:
+            arbitrumSepolia,
 
-    },
+        contractAddress:
+            billingContract,
 
-});
+        apiUrl,
+    });

@@ -3,8 +3,27 @@ export type PlanStatus =
     | "PAUSED"
     | "ARCHIVED";
 
-export interface PlanRecord {
+export type BillingPeriodNamed =
+    | "FIVE_MINUTES"
+    | "HOURLY"
+    | "DAILY"
+    | "WEEKLY"
+    | "MONTHLY"
+    | "QUARTERLY"
+    | "YEARLY";
 
+export type TrialPeriodNamed =
+    | "NONE"
+    | "FIVE_MINUTES"
+    | "HOURLY"
+    | "DAILY"
+    | "WEEKLY"
+    | "MONTHLY"
+    | "QUARTERLY"
+    | "YEARLY";
+
+
+export interface PlanRecord {
     planId: number;
 
     merchantId: number;
@@ -13,9 +32,17 @@ export interface PlanRecord {
 
     amount: bigint;
 
-    billingIntervalSeconds: bigint;
+    billingIntervalSeconds: number;
 
-    trialPeriod: bigint;
+    billingPeriodNamed?: BillingPeriodNamed;
+
+    trialPeriod: number;
+
+    trialPeriodNamed: TrialPeriodNamed;
+
+    name: string;
+
+    status: "ACTIVE" | "PAUSED" | "ARCHIVED";
 
     maxSubscribers: number;
 
@@ -23,16 +50,26 @@ export interface PlanRecord {
 
     metadataURI: string;
 
-    name: string;
+    createdAt: Date;
 
-    status: PlanStatus;
+    updatedAt: Date;
+}
 
-    billingPeriodNamed: string;
-
-    trialPeriodNamed: string;
-
-    createdAt: number;
-
-    updatedAt: number;
-
+export interface  PlanMirrorResponse {
+    plan?: PlanRecord;
+    plan_id?: number;
+    merchant_id?: number;
+    payment_token?: `0x${string}`;
+    amount?: string;
+    billing_interval_seconds?: number;
+    billing_period_named?: BillingPeriodNamed;
+    trial_period?: number;
+    trial_period_named?: TrialPeriodNamed;
+    max_subscribers?: number;
+    allow_renewal?: boolean;
+    metadata_uri?: string;
+    name?: string;
+    status?: string;
+    created_at?: string;
+    updated_at?: string;
 }

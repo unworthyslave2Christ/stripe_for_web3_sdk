@@ -29,7 +29,7 @@
 
     "isolatedModules": true,
 
-    "noEmit": true
+    "noEmitOnError": false
   },
 
   "include": [
