@@ -51,7 +51,7 @@ export interface MerchantClientConfig {
     /**
      * Backend API used for canonical persistence/mirroring.
      */
-    apiUrl?: string;
+    apiUrl: string;
 }
 
 ////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ export class MerchantClient {
 
     readonly contractAddress: Address;
 
-    readonly apiUrl?: string;
+    readonly apiUrl: string;
 
     constructor(config: MerchantClientConfig) {
         this.walletClient = config.walletClient;
