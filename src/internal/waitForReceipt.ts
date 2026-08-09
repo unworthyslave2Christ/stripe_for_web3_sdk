@@ -15,9 +15,11 @@ export async function waitForReceipt({
     hash: userOperationHash,
   });
 
-  return {
-    receipt: userOpReceipt.receipt,
+  return userOpReceipt.receipt;
 
-    userOperationReceipt: userOpReceipt,
-  };
+  // return {
+  //   receipt: userOpReceipt.receipt,
+
+  //   userOperationReceipt: userOpReceipt,
+  // };
 }

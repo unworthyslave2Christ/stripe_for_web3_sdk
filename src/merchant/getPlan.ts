@@ -2,13 +2,34 @@
 
 import type { MerchantClient } from "./MerchantClient";
 
-import type { PlanRecord, PlanStatus } from "../types/Plan";
+import type {
+  BillingPeriodNamed,
+  PlanRecord,
+  PlanStatus,
+  TrialPeriodNamed,
+} from "../types/Plan";
+
+////////////////////////////////////////////////////////////
+// INPUT
+////////////////////////////////////////////////////////////
 
 export interface GetPlanParams {
+  /**
+   * Merchant SDK client.
+   *
+   * Only the API URL is required for this read operation.
+   */
   client: MerchantClient;
 
+  /**
+   * Protocol/backend plan identifier.
+   */
   planId: number;
 }
+
+////////////////////////////////////////////////////////////
+// API RESPONSE
+////////////////////////////////////////////////////////////
 
 interface PlanApiResponse {
   plan_id: number;
@@ -42,60 +63,159 @@ interface PlanApiResponse {
   updated_at: string;
 }
 
+////////////////////////////////////////////////////////////
+// GET PLAN
+////////////////////////////////////////////////////////////
+
+/**
+ * Retrieves a billing plan from the backend.
+ *
+ * This is a read-only operation.
+ *
+ * It deliberately does NOT:
+ *
+ * - use walletClient
+ * - use publicClient
+ * - rebuild the merchant Kernel
+ * - use MerchantResolver
+ *
+ * The backend is the canonical persistence layer for PlanRecord.
+ */
 export async function getPlan({
   client,
-
   planId,
 }: GetPlanParams): Promise<PlanRecord> {
-  const response = await fetch(
-    `${client.apiUrl ?? ""}/plans/${planId}`,
+  ////////////////////////////////////////////////////////////
+  // CONFIGURATION
+  ////////////////////////////////////////////////////////////
 
-    {
-      method: "GET",
+  if (!client.apiUrl) {
+    throw new Error("Merchant API URL is not configured.");
+  }
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+  ////////////////////////////////////////////////////////////
+  // VALIDATION
+  ////////////////////////////////////////////////////////////
 
-      cache: "no-store",
+  if (!Number.isInteger(planId) || planId <= 0) {
+    throw new Error("Invalid plan ID.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // REQUEST
+  ////////////////////////////////////////////////////////////
+
+  const response = await fetch(`${client.apiUrl}/api/v1/plans/${planId}`, {
+    method: "GET",
+
+    headers: {
+      Accept: "application/json",
     },
-  );
+
+    cache: "no-store",
+  });
+
+  ////////////////////////////////////////////////////////////
+  // RESPONSE VALIDATION
+  ////////////////////////////////////////////////////////////
 
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`Billing plan ${planId} was not found.`);
+    }
+
     throw new Error("Unable to retrieve billing plan.");
   }
 
-  const data = await response.json() as PlanApiResponse;
+  ////////////////////////////////////////////////////////////
+  // PARSE RESPONSE
+  ////////////////////////////////////////////////////////////
 
+  const body = (await response.json()) as
+    | {
+        plan?: PlanApiResponse;
+      }
+    | PlanApiResponse;
+
+  const data = "plan" in body && body.plan ? body.plan : body;
+
+  ////////////////////////////////////////////////////////////
+  // NORMALIZE
+  ////////////////////////////////////////////////////////////
+
+  return normalizePlan(data as PlanApiResponse);
+}
+
+////////////////////////////////////////////////////////////
+// NORMALIZATION
+////////////////////////////////////////////////////////////
+
+/**
+ * Converts the backend/Supabase representation into
+ * the canonical SDK PlanRecord representation.
+ */
+function normalizePlan(input: PlanApiResponse): PlanRecord {
   return {
-    planId: data.plan_id,
+    planId: Number(input.plan_id),
 
-    merchantId: data.merchant_id,
+    merchantId: Number(input.merchant_id),
 
-    paymentToken: data.payment_token,
+    paymentToken: input.payment_token,
 
-    amount: BigInt(data.amount),
+    amount: BigInt(input.amount),
 
-    billingIntervalSeconds: BigInt(data.billing_interval_seconds),
+    billingIntervalSeconds: Number(input.billing_interval_seconds),
 
-    trialPeriod: BigInt(data.trial_period),
+    billingPeriodNamed: input.billing_period_named as BillingPeriodNamed,
 
-    maxSubscribers: data.max_subscribers,
+    trialPeriod: Number(input.trial_period),
 
-    allowRenewal: data.allow_renewal,
+    trialPeriodNamed: input.trial_period_named as TrialPeriodNamed,
 
-    metadataURI: data.metadata_uri,
+    maxSubscribers: Number(input.max_subscribers),
 
-    name: data.name,
+    allowRenewal: Boolean(input.allow_renewal),
 
-    status: data.status as PlanStatus,
+    metadataURI: input.metadata_uri ?? "",
 
-    billingPeriodNamed: data.billing_period_named,
+    name: input.name,
 
-    trialPeriodNamed: data.trial_period_named,
+    status: input.status as PlanStatus,
 
-    createdAt: Number(data.created_at),
+    createdAt: normalizeDate(input.created_at),
 
-    updatedAt: Number(data.updated_at),
+    updatedAt: normalizeDate(input.updated_at),
   };
+}
+
+////////////////////////////////////////////////////////////
+// DATE NORMALIZATION
+////////////////////////////////////////////////////////////
+
+function normalizeDate(value: unknown): Date {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Invalid plan timestamp: ${value}`);
+    }
+
+    return date;
+  }
+
+  if (typeof value === "number") {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Invalid plan timestamp: ${value}`);
+    }
+
+    return date;
+  }
+
+  throw new Error("Plan timestamp is missing or invalid.");
 }

@@ -1,107 +1,107 @@
-// src/customer/CustomerClient.ts
+// // src/customer/CustomerClient.ts
 
-import type { PublicClient, WalletClient } from "viem";
+// import type { PublicClient, WalletClient } from "viem";
 
-import type { SubscriptionRecord } from "../types/Subscription";
+// import type { SubscriptionRecord } from "../types/Subscription";
 
-import type { CustomerResolver } from "../kernels/getCustomerKernel";
+// // import type { CustomerResolver } from "../kernels/getCustomerKernel";
 
-import { subscribe } from "./subscribe";
+// import { subscribe } from "./subscribe";
 
-import { pauseSubscription } from "./pauseSubscription";
+// import { pauseSubscription } from "./pauseSubscription";
 
-import { resumeSubscription } from "./resumeSubscription";
+// import { resumeSubscription } from "./resumeSubscription";
 
-import { cancelSubscription } from "./cancelSubscription";
+// import { cancelSubscription } from "./cancelSubscription";
 
-import { getSubscription } from "./getSubscription";
+// import { getSubscription } from "./getSubscription";
 
-import { getSubscriptions } from "./getSubscriptions";
+// import { getSubscriptions } from "./getSubscriptions";
 
-export interface CustomerClientConfig {
-  walletClient: WalletClient;
+// export interface CustomerClientConfig {
+//   walletClient: WalletClient;
 
-  publicClient: PublicClient;
+//   publicClient: PublicClient;
 
-  customerResolver: CustomerResolver;
+//   // customerResolver: CustomerResolver;
 
-  contractAddress?: `0x${string}`;
+//   contractAddress?: `0x${string}`;
 
-  apiUrl?: string;
-}
+//   apiUrl?: string;
+// }
 
-export class CustomerClient {
-  readonly walletClient: WalletClient;
+// export class CustomerClient {
+//   readonly walletClient: WalletClient;
 
-  readonly publicClient: PublicClient;
+//   readonly publicClient: PublicClient;
 
-  readonly customerResolver: CustomerResolver;
+//   // readonly customerResolver: CustomerResolver;
 
-  readonly contractAddress?: `0x${string}`;
+//   readonly contractAddress?: `0x${string}`;
 
-  readonly apiUrl?: string;
+//   readonly apiUrl?: string;
 
-  constructor(config: CustomerClientConfig) {
-    this.walletClient = config.walletClient;
+//   constructor(config: CustomerClientConfig) {
+//     this.walletClient = config.walletClient;
 
-    this.publicClient = config.publicClient;
+//     this.publicClient = config.publicClient;
 
-    this.customerResolver = config.customerResolver;
+//     // this.customerResolver = config.customerResolver;
 
-    this.contractAddress = config.contractAddress;
+//     this.contractAddress = config.contractAddress;
 
-    this.apiUrl = config.apiUrl;
-  }
+//     this.apiUrl = config.apiUrl;
+//   }
 
-  ////////////////////////////////////////////////////////////
-  // SUBSCRIPTIONS
-  ////////////////////////////////////////////////////////////
+//   ////////////////////////////////////////////////////////////
+//   // SUBSCRIPTIONS
+//   ////////////////////////////////////////////////////////////
 
-  subscribe(subscription: SubscriptionRecord) {
-    return subscribe({
-      client: this,
+//   subscribe(subscription: SubscriptionRecord) {
+//     return subscribe({
+//       client: this,
 
-      subscription,
-    });
-  }
+//       subscription,
+//     });
+//   }
 
-  pauseSubscription(subscription: SubscriptionRecord) {
-    return pauseSubscription({
-      client: this,
+//   pauseSubscription(subscription: SubscriptionRecord) {
+//     return pauseSubscription({
+//       client: this,
 
-      subscription,
-    });
-  }
+//       subscription,
+//     });
+//   }
 
-  resumeSubscription(subscription: SubscriptionRecord) {
-    return resumeSubscription({
-      client: this,
+//   resumeSubscription(subscription: SubscriptionRecord) {
+//     return resumeSubscription({
+//       client: this,
 
-      subscription,
-    });
-  }
+//       subscription,
+//     });
+//   }
 
-  cancelSubscription(subscription: SubscriptionRecord) {
-    return cancelSubscription({
-      client: this,
+//   cancelSubscription(subscription: SubscriptionRecord) {
+//     return cancelSubscription({
+//       client: this,
 
-      subscription,
-    });
-  }
+//       subscription,
+//     });
+//   }
 
-  getSubscription(subscriptionId: number) {
-    return getSubscription({
-      client: this,
+//   getSubscription(subscriptionId: number) {
+//     return getSubscription({
+//       client: this,
 
-      subscriptionId,
-    });
-  }
+//       subscriptionId,
+//     });
+//   }
 
-  getSubscriptions(customerId: number) {
-    return getSubscriptions({
-      client: this,
+//   getSubscriptions(customerId: number) {
+//     return getSubscriptions({
+//       client: this,
 
-      customerId: customerId.toString(),
-    });
-  }
-}
+//       customerId: customerId.toString(),
+//     });
+//   }
+// }

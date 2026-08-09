@@ -1,111 +1,111 @@
-// src/customer/subscribe.ts
+// // src/customer/subscribe.ts
 
-import type { CustomerClient } from "./CustomerClient";
+// import type { CustomerClient } from "./CustomerClient";
 
-import type { SubscriptionRecord } from "../types/Subscription";
+// import type { SubscriptionRecord } from "../types/Subscription";
 
-import { getCustomerKernel } from "../kernels/getCustomerKernel";
+// // import { getCustomerKernel } from "../kernels/getCustomerKernel";
 
-import { encodeBillingProtocolCall } from "../contracts/encode";
+// import { encodeBillingProtocolCall } from "../contracts/encode";
 
-import { executeUserOperation } from "../internal/executeUserOperation";
+// import { executeUserOperation } from "../internal/executeUserOperation";
 
-import { waitForReceipt } from "../internal/waitForReceipt";
+// import { waitForReceipt } from "../internal/waitForReceipt";
 
-import { mirror } from "../internal/mirror";
+// import { mirror } from "../internal/mirror";
 
-export interface SubscribeParams {
-  client: CustomerClient;
+// export interface SubscribeParams {
+//   client: CustomerClient;
 
-  subscription: SubscriptionRecord;
-}
+//   subscription: SubscriptionRecord;
+// }
 
-export async function subscribe({
-  client,
+// export async function subscribe({
+//   client,
 
-  subscription,
-}: SubscribeParams) {
-  ////////////////////////////////////////////////////////////
-  // Obtain Customer Kernel
-  ////////////////////////////////////////////////////////////
+//   subscription,
+// }: SubscribeParams) {
+//   ////////////////////////////////////////////////////////////
+//   // Obtain Customer Kernel
+//   ////////////////////////////////////////////////////////////
 
-  const {
-    customer,
+//   const {
+//     customer,
 
-    kernel,
+//     kernel,
 
-    kernelClient,
+//     kernelClient,
 
-    permission,
-  } = await getCustomerKernel({
-    walletClient: client.walletClient,
+//     permission,
+//   } = await getCustomerKernel({
+//     walletClient: client.walletClient,
 
-    publicClient: client.publicClient,
+//     publicClient: client.publicClient,
 
-    customerResolver: client.customerResolver,
-  });
+//     // customerResolver: client.customerResolver,
+//   });
 
-  ////////////////////////////////////////////////////////////
-  // Encode Billing Protocol Call
-  ////////////////////////////////////////////////////////////
+//   ////////////////////////////////////////////////////////////
+//   // Encode Billing Protocol Call
+//   ////////////////////////////////////////////////////////////
 
-  const data = encodeBillingProtocolCall(
-    "subscribe",
+//   const data = encodeBillingProtocolCall(
+//     "subscribe",
 
-    [BigInt(subscription.planId), permission.permissionId],
-  );
+//     [BigInt(subscription.planId), permission.permissionId],
+//   );
 
-  ////////////////////////////////////////////////////////////
-  // Execute User Operation
-  ////////////////////////////////////////////////////////////
+//   ////////////////////////////////////////////////////////////
+//   // Execute User Operation
+//   ////////////////////////////////////////////////////////////
 
-  const userOpHash = await executeUserOperation({
-    kernel,
+//   const userOpHash = await executeUserOperation({
+//     kernel,
 
-    kernelClient,
+//     kernelClient,
 
-    contractAddress: client.contractAddress!,
+//     contractAddress: client.contractAddress!,
 
-    data,
-  });
+//     data,
+//   });
 
-  ////////////////////////////////////////////////////////////
-  // Wait For Receipt
-  ////////////////////////////////////////////////////////////
+//   ////////////////////////////////////////////////////////////
+//   // Wait For Receipt
+//   ////////////////////////////////////////////////////////////
 
-  const receipt = await waitForReceipt({
-    kernelClient,
+//   const receipt = await waitForReceipt({
+//     kernelClient,
 
-    userOperationHash: userOpHash,
-  });
+//     userOperationHash: userOpHash,
+//   });
 
-  ////////////////////////////////////////////////////////////
-  // Mirror Backend
-  ////////////////////////////////////////////////////////////
+//   ////////////////////////////////////////////////////////////
+//   // Mirror Backend
+//   ////////////////////////////////////////////////////////////
 
-  await mirror({
-    apiUrl: client.apiUrl,
+//   await mirror({
+//     apiUrl: client.apiUrl,
 
-    endpoint: "/subscriptions",
+//     endpoint: "/subscriptions",
 
-    body: subscription,
-  });
+//     body: subscription,
+//   });
 
-  ////////////////////////////////////////////////////////////
-  // Return
-  ////////////////////////////////////////////////////////////
+//   ////////////////////////////////////////////////////////////
+//   // Return
+//   ////////////////////////////////////////////////////////////
 
-  return {
-    customer,
+//   return {
+//     customer,
 
-    subscription,
+//     subscription,
 
-    kernel,
+//     kernel,
 
-    permission,
+//     permission,
 
-    userOpHash,
+//     userOpHash,
 
-    receipt,
-  };
-}
+//     receipt,
+//   };
+// }

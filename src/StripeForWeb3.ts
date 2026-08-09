@@ -1,99 +1,109 @@
 // src/StripeForWeb3.ts
 
 import type {
-  Address,
-  Chain,
-  PublicClient,
-  WalletClient as ViemWalletClient,
+    Address,
+    Chain,
+    PublicClient,
+    WalletClient as ViemWalletClient,
 } from "viem";
 
 import { MerchantClient } from "./merchant";
-
-import { CustomerClient } from "./customer";
-
+// import { CustomerClient } from "./customer";
 import { WalletClient } from "./wallet";
 
-import type { MerchantResolver } from "./kernels/getMerchantKernel";
-
-import type { CustomerResolver } from "./kernels/getCustomerKernel";
+////////////////////////////////////////////////////////////
+// CONFIGURATION
+////////////////////////////////////////////////////////////
 
 export interface StripeForWeb3Config {
-  walletClient: ViemWalletClient;
+    /**
+     * Connected wallet used to authorize SDK operations.
+     */
+    walletClient: ViemWalletClient;
 
-  publicClient: PublicClient;
+    /**
+     * Public blockchain client used for reads and
+     * transaction/user-operation confirmation.
+     */
+    publicClient: PublicClient;
 
-  chain: Chain;
+    /**
+     * Chain on which the Billing Protocol is deployed.
+     */
+    chain: Chain;
 
-  contractAddress: Address;
+    /**
+     * Web3BillingProtocol contract address.
+     */
+    contractAddress: Address;
 
-  apiUrl?: string;
-
-  merchantResolver: MerchantResolver;
-
-  customerResolver: CustomerResolver;
+    /**
+     * Backend API used for canonical persistence/mirroring.
+     *
+     * Example:
+     * https://api.example.com
+     */
+    apiUrl?: string;
 }
+
+////////////////////////////////////////////////////////////
+// SDK
+////////////////////////////////////////////////////////////
 
 export class StripeForWeb3 {
-  readonly merchant: MerchantClient;
+    readonly merchant: MerchantClient;
 
-  readonly customer: CustomerClient;
+    // readonly customer: CustomerClient;
 
-  readonly wallet: WalletClient;
+    readonly wallet: WalletClient;
 
-  readonly config: StripeForWeb3Config;
+    readonly config: StripeForWeb3Config;
 
-  constructor(config: StripeForWeb3Config) {
-    this.config = config;
+    constructor(config: StripeForWeb3Config) {
+        this.config = config;
 
-    /////////////////////////////////////////////////////////
-    // Merchant
-    /////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////
+        // Merchant
+        ////////////////////////////////////////////////////////////
 
-    this.merchant = new MerchantClient({
-      walletClient: config.walletClient,
+        this.merchant = new MerchantClient({
+            walletClient: config.walletClient,
 
-      publicClient: config.publicClient,
+            publicClient: config.publicClient,
 
-      contractAddress: config.contractAddress,
+            contractAddress: config.contractAddress,
 
-      apiUrl: config.apiUrl,
+            apiUrl: config.apiUrl!,
+        });
 
-      merchantResolver: config.merchantResolver,
-    });
+        //////////////////////////////////////////////////////////
+        // Customer
+        //////////////////////////////////////////////////////////
 
-    /////////////////////////////////////////////////////////
-    // Customer
-    /////////////////////////////////////////////////////////
+        // this.customer = new CustomerClient({
+        //     walletClient: config.walletClient,
 
-    this.customer = new CustomerClient({
-      walletClient: config.walletClient,
+        //     publicClient: config.publicClient,
 
-      publicClient: config.publicClient,
+        //     contractAddress: config.contractAddress,
 
-      contractAddress: config.contractAddress,
+        //     apiUrl: config.apiUrl,
+        // });
 
-      apiUrl: config.apiUrl,
+        // ////////////////////////////////////////////////////////////
+        // // Wallet
+        // ////////////////////////////////////////////////////////////
 
-      customerResolver: config.customerResolver,
-    });
+        this.wallet = new WalletClient({
+            walletClient: config.walletClient,
 
-    /////////////////////////////////////////////////////////
-    // Wallet
-    /////////////////////////////////////////////////////////
+            publicClient: config.publicClient,
 
-    this.wallet = new WalletClient({
-      walletClient: config.walletClient,
+            chain: config.chain,
 
-      publicClient: config.publicClient,
+            contractAddress: config.contractAddress,
 
-      chain: config.chain,
-
-      contractAddress: config.contractAddress,
-
-      apiUrl: config.apiUrl,
-    });
-  }
+            apiUrl: config.apiUrl,
+        });
+    }
 }
-
-
-// I think this redesign is the right direction. The SDK should become protocol-centric, not application-centric. It should know about wallets, public clients, chains, and the Billing Contract—nothing about your database, API, merchants, or customers.

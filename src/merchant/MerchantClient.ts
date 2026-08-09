@@ -1,145 +1,220 @@
 // src/merchant/MerchantClient.ts
 
-import type { PublicClient, WalletClient } from "viem";
+import type {
+    Address,
+    PublicClient,
+    WalletClient,
+} from "viem";
 
 import type { MerchantRecord } from "../types/Merchant";
-
 import type { PlanRecord } from "../types/Plan";
 
-import { createMerchant } from "./createMerchant";
+import {
+    createMerchant,
+    type CreateMerchantParams,
+    type CreateMerchantResult,
+} from "./createMerchant";
 
-import { createPlan } from "./createPlan";
-
+import { createPlan, CreatePlanParams } from "./createPlan";
 import { updatePlan } from "./updatePlan";
-
 import { pausePlan } from "./pausePlan";
-
 import { resumePlan } from "./resumePlan";
-
 import { archivePlan } from "./archivePlan";
-
 import { getPlan } from "./getPlan";
-
 import { getPlans } from "./getPlans";
-import { MerchantResolver } from "../kernels/getMerchantKernel";
 
-export interface MerchantClientConfig {
-  walletClient: WalletClient;
-
-  publicClient: PublicClient;
-
-   merchantResolver: MerchantResolver;
-
-  /**
-   * Optional Billing Protocol address.
-   * Falls back to the SDK default if omitted.
-   */
-  contractAddress?: `0x${string}`;
-
-  /**
-   * Backend URL used for mirror operations.
-   */
-  apiUrl?: string;
+export interface MerchantApiResponseMinimal{
+    merchant?: MerchantRecord;
+    error?: string;
 }
 
+////////////////////////////////////////////////////////////
+// CONFIGURATION
+////////////////////////////////////////////////////////////
+
+export interface MerchantClientConfig {
+    /**
+     * Wallet used to authorize merchant operations.
+     */
+    walletClient: WalletClient;
+
+    /**
+     * Public blockchain client.
+     */
+    publicClient: PublicClient;
+
+    /**
+     * Billing Protocol contract.
+     */
+    contractAddress: Address;
+
+    /**
+     * Backend API used for canonical persistence/mirroring.
+     */
+    apiUrl?: string;
+}
+
+////////////////////////////////////////////////////////////
+// REGISTRATION INPUT
+////////////////////////////////////////////////////////////
+
+export interface RegisterMerchantInput {
+    /**
+     * Human-readable merchant/business name.
+     */
+    name: string;
+
+    /**
+     * Wallet receiving merchant payouts.
+     */
+    payoutWallet: Address;
+
+    /**
+     * Optional metadata URI.
+     */
+    metadataURI?: string;
+}
+
+////////////////////////////////////////////////////////////
+// CLIENT
+////////////////////////////////////////////////////////////
+
 export class MerchantClient {
-  readonly walletClient: WalletClient;
+    readonly walletClient: WalletClient;
 
-  readonly publicClient: PublicClient;
+    readonly publicClient: PublicClient;
 
-  readonly merchantResolver: MerchantResolver;
+    readonly contractAddress: Address;
 
-  readonly contractAddress?: `0x${string}`;
+    readonly apiUrl?: string;
 
-  readonly apiUrl?: string;
+    constructor(config: MerchantClientConfig) {
+        this.walletClient = config.walletClient;
 
-  constructor(config: MerchantClientConfig) {
-    this.walletClient = config.walletClient;
+        this.publicClient = config.publicClient;
 
-    this.publicClient = config.publicClient;
+        this.contractAddress = config.contractAddress;
 
-    this.merchantResolver = config.merchantResolver;
+        this.apiUrl = config.apiUrl;
+    }
 
-    this.contractAddress = config.contractAddress;
+    ////////////////////////////////////////////////////////////
+    // MERCHANT REGISTRATION
+    ////////////////////////////////////////////////////////////
 
-    this.apiUrl = config.apiUrl;
-  }
+    async register(
+        input: RegisterMerchantInput,
+    ): Promise<CreateMerchantResult> {
+        return createMerchant({
+            client: this,
 
-  ////////////////////////////////////////////////////////////
-  // MERCHANT
-  ////////////////////////////////////////////////////////////
+            name: input.name,
 
-  createMerchant(merchant: MerchantRecord) {
-    return createMerchant({
-      client: this,
+            payoutWallet: input.payoutWallet,
 
-      merchant,
-    });
-  }
+            metadataURI:
+                input.metadataURI ?? "",
+        });
+    }
 
-  ////////////////////////////////////////////////////////////
-  // PLANS
-  ////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    // MERCHANT
+    ////////////////////////////////////////////////////////////
 
-  createPlan(plan: PlanRecord) {
-    return createPlan({
-      client: this,
+    async getById(
+        merchantId: number,
+    ): Promise<MerchantRecord> {
+        if (!this.apiUrl) {
+            throw new Error(
+                "Merchant API URL is not configured.",
+            );
+        }
 
-      plan,
-    });
-  }
+        const response = await fetch(
+            `${this.apiUrl}/api/v1/merchants/${merchantId}`,
+        );
 
-  updatePlan(
-    originalPlan: PlanRecord,
+        const body =
+            await response.json() as MerchantApiResponseMinimal;
 
-    updatedPlan: PlanRecord,
-  ) {
-    return updatePlan({
-      client: this,
+        if (!response.ok) {
+            throw new Error(
+                body.error ??
+                `Unable to retrieve merchant ${merchantId}.`,
+            );
+        }
 
-      originalPlan,
+        if (!body.merchant) {
+            throw new Error(
+                `Merchant ${merchantId} was not returned by the API.`,
+            );
+        }
 
-      updatedPlan,
-    });
-  }
+        return body.merchant;
+    }
 
-  pausePlan(plan: PlanRecord) {
-    return pausePlan({
-      client: this,
+    ////////////////////////////////////////////////////////////
+    // PLANS
+    ////////////////////////////////////////////////////////////
 
-      plan,
-    });
-  }
+    createPlan(
+        params: Omit<CreatePlanParams, "client">,
+    ) {
+        return createPlan({
+            client: this,
 
-  resumePlan(plan: PlanRecord) {
-    return resumePlan({
-      client: this,
+            ...params,
+        });
+    }
 
-      plan,
-    });
-  }
+    updatePlan(
+        originalPlan: PlanRecord,
+        updatedPlan: PlanRecord,
+    ) {
+        return updatePlan({
+            client: this,
+            originalPlan,
+            updatedPlan,
+        });
+    }
 
-  archivePlan(plan: PlanRecord) {
-    return archivePlan({
-      client: this,
+    pausePlan(plan: PlanRecord) {
+        return pausePlan({
+            client: this,
 
-      plan,
-    });
-  }
+            plan,
+        });
+    }
 
-  getPlan(planId: number) {
-    return getPlan({
-      client: this,
+    resumePlan(plan: PlanRecord) {
+        return resumePlan({
+            client: this,
 
-      planId,
-    });
-  }
+            plan,
+        });
+    }
 
-  getPlans(merchantId: number) {
-    return getPlans({
-      client: this,
+    archivePlan(plan: PlanRecord) {
+        return archivePlan({
+            client: this,
 
-      merchantId,
-    });
-  }
+            plan,
+        });
+    }
+
+    getPlan(planId: number) {
+        return getPlan({
+            client: this,
+
+            planId,
+        });
+    }
+
+    getPlans(merchantId: number) {
+        return getPlans({
+            client: this,
+
+            merchantId,
+        });
+    }
 }
