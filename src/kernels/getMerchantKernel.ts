@@ -113,7 +113,7 @@ export interface GetMerchantKernelParams {
     /**
      * Merchant backend API URL.
      */
-    apiUrl?: string;
+    apiUrl: string;
 }
 
 export interface MerchantKernelResult {

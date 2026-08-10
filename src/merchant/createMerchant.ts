@@ -29,7 +29,7 @@ import { mirror } from "../internal/mirror";
  * address for the SDK/protocol deployment.
  */
 export const PLATFORM_BILLING_OPERATOR: Address =
-    "0x0000000000000000000000000000000000000000";
+    "0x82818c00e96356753c146Fc3119b1077DeC0d405";
 
 ////////////////////////////////////////////////////////////
 // INPUT
@@ -255,7 +255,7 @@ export async function createMerchant({
     const registrationHash =
         await client.walletClient.writeContract({
             account:
-                ownerWallet,
+                client.walletClient.account!,
 
             chain:
                 client.walletClient.chain,

@@ -226,6 +226,8 @@ export async function updatePlan({
     walletClient: client.walletClient,
 
     publicClient: client.publicClient,
+
+    apiUrl: client.apiUrl
   });
 
   ////////////////////////////////////////////////////////////
@@ -511,41 +513,57 @@ export async function updatePlan({
    * including the named-period metadata.
    */
   const mirrored = await mirror({
-    apiUrl: client.apiUrl,
+      apiUrl: client.apiUrl,
 
-    endpoint: "/api/v1/plans",
+      endpoint:
+          `/api/v1/plans?planId=${updatedPlan.planId}`,
 
-    body: {
-      ...updatedPlan,
+      method: "PATCH",
 
-      planId: updatedPlan.planId,
+      body: {
+          ...updatedPlan,
 
-      merchantId: merchant.merchantId,
+          planId:
+              updatedPlan.planId,
 
-      paymentToken: updatedPlan.paymentToken,
+          merchantId:
+              merchant.merchantId,
 
-      amount: updatedPlan.amount.toString(),
+          paymentToken:
+              updatedPlan.paymentToken,
 
-      billingIntervalSeconds: updatedBillingIntervalSeconds,
+          amount:
+              updatedPlan.amount.toString(),
 
-      billingPeriodNamed: updatedPlan.billingPeriodNamed,
+          billingIntervalSeconds:
+              updatedBillingIntervalSeconds,
 
-      trialPeriod: updatedTrialPeriod,
+          billingPeriodNamed:
+              updatedPlan.billingPeriodNamed,
 
-      trialPeriodNamed: updatedPlan.trialPeriodNamed,
+          trialPeriod:
+              updatedTrialPeriod,
 
-      maxSubscribers: updatedPlan.maxSubscribers,
+          trialPeriodNamed:
+              updatedPlan.trialPeriodNamed,
 
-      allowRenewal: updatedPlan.allowRenewal,
+          maxSubscribers:
+              updatedPlan.maxSubscribers,
 
-      metadataURI: updatedPlan.metadataURI,
+          allowRenewal:
+              updatedPlan.allowRenewal,
 
-      name: updatedPlan.name,
+          metadataURI:
+              updatedPlan.metadataURI,
 
-      userOperationHash,
+          name:
+              updatedPlan.name,
 
-      transactionHash: transactionHash ?? null,
-    },
+          userOperationHash,
+
+          transactionHash:
+              transactionHash ?? null,
+      },
   }) as PlanMirrorResponse;
 
   ////////////////////////////////////////////////////////////
@@ -653,3 +671,6 @@ function extractTransactionHash(receipt: any): `0x${string}` | undefined {
 
   return hash as `0x${string}` | undefined;
 }
+
+
+

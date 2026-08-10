@@ -304,6 +304,8 @@ export async function createPlan({
     walletClient: client.walletClient,
 
     publicClient: client.publicClient,
+
+    apiUrl: client.apiUrl
   });
 
   ////////////////////////////////////////////////////////////

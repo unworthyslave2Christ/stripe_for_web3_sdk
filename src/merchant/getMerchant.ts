@@ -266,10 +266,9 @@ export async function getMerchantByOwnerWallet(
   apiUrl: string,
 ): Promise<MerchantRecord | null> {
     
-  const baseUrl = apiUrl.replace(/\/+$/, "");
 
   const response = await fetch(
-    `${baseUrl}/api/v1/merchants/owner/${ownerWallet}`,
+    `${apiUrl}/api/v1/merchants/owner/${ownerWallet}`,
     {
       method: "GET",
 

@@ -4,6 +4,8 @@ export interface MirrorRequest<T = unknown> {
     endpoint: string;
 
     body: T;
+
+    method?: string;
 }
 export async function mirror<T>({
     apiUrl,
@@ -11,17 +13,21 @@ export async function mirror<T>({
     endpoint,
 
     body,
+
+    method
 }: MirrorRequest<T>) {
     const response = await fetch(
         `${apiUrl ?? ""}${endpoint}`,
         {
-            method: "POST",
+            method: method ?? "POST",
 
             headers: {
                 "Content-Type": "application/json",
             },
 
             body: JSON.stringify(body),
+
+            cache: "no-store"
         },
     );
 

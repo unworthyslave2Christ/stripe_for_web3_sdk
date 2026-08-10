@@ -232,7 +232,7 @@ export async function getPlans({
     ////////////////////////////////////////////////////////////
 
     const response = await fetch(
-        `${client.apiUrl}/merchants/${merchantId}/plans`,
+        `${client.apiUrl}/plans?merchantId=${merchantId}`,
         {
             method: "GET",
 

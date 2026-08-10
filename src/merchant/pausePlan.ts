@@ -123,6 +123,8 @@ export async function pausePlan({
 
         publicClient:
             client.publicClient,
+
+        apiUrl: client.apiUrl
     });
 
     ////////////////////////////////////////////////////////////
@@ -230,6 +232,7 @@ export async function pausePlan({
                 status:
                     "PAUSED",
             },
+
         }) as PlanMirrorResponse;
 
     ////////////////////////////////////////////////////////////

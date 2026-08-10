@@ -13,7 +13,7 @@ export async function encodeKernelCall(
 
   calls: KernelCall[],
 ) {
-  return kernel.encodeCalls(
+  return kernel.account.encodeCalls(
     calls.map((call) => ({
       to: call.to,
 

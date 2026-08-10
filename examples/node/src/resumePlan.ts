@@ -1,0 +1,45 @@
+// src/resumePlan.ts
+
+import type {
+    Address,
+} from "viem";
+
+import { stripe } from "./config.js";
+
+import { PlanRecord } from "@stripe-for-web3/sdk";
+
+////////////////////////////////////////////////////////////
+// UPDATE PLAN
+////////////////////////////////////////////////////////////
+
+export async function resumePlan(
+    plan: PlanRecord,
+) {
+
+    ////////////////////////////////////////////////////////////
+    // VALIDATION
+    ////////////////////////////////////////////////////////////
+
+    if (
+        !plan.planId 
+    ) {
+        throw new Error(
+            "Plan must have a planId.",
+        );
+    }
+
+    
+
+    const resumePlanResult = await stripe.merchant.resumePlan(
+        plan
+    );
+
+    ////////////////////////////////////////////////////////////
+    // RESULT
+    ////////////////////////////////////////////////////////////
+
+    return {
+        resumedPlan:
+            resumePlanResult,  
+    };
+}

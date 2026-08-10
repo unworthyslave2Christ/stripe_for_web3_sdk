@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc && node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +17,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "@stripe-for-web3/sdk": "file:..\\..\\stripe-for-web3-sdk-0.2.0.tgz",
+    "@stripe-for-web3/sdk": "file:..\\..\\stripe-for-web3-sdk-0.2.8.tgz",
     "@zerodev/ecdsa-validator": "^5",
     "@zerodev/sdk": "^5",
     "dotenv": "^17",
