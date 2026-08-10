@@ -114,6 +114,8 @@ export async function resumePlan({
     walletClient: client.walletClient,
 
     publicClient: client.publicClient,
+
+    apiUrl: client.apiUrl
   });
 
   ////////////////////////////////////////////////////////////

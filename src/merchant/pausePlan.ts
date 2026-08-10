@@ -123,6 +123,8 @@ export async function pausePlan({
 
         publicClient:
             client.publicClient,
+
+        apiUrl: client.apiUrl
     });
 
     ////////////////////////////////////////////////////////////
