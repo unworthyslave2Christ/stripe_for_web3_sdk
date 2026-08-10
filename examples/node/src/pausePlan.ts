@@ -1,0 +1,45 @@
+// src/updatePlan.ts
+
+import type {
+    Address,
+} from "viem";
+
+import { stripe } from "./config.js";
+
+import { PlanRecord } from "@stripe-for-web3/sdk";
+
+////////////////////////////////////////////////////////////
+// UPDATE PLAN
+////////////////////////////////////////////////////////////
+
+export async function pausePlan(
+    plan: PlanRecord,
+) {
+
+    ////////////////////////////////////////////////////////////
+    // VALIDATION
+    ////////////////////////////////////////////////////////////
+
+    if (
+        !plan.planId 
+    ) {
+        throw new Error(
+            "Plan must have a planId.",
+        );
+    }
+
+    
+
+    const pausePlanResult = await stripe.merchant.pausePlan(
+        plan
+    );
+
+    ////////////////////////////////////////////////////////////
+    // RESULT
+    ////////////////////////////////////////////////////////////
+
+    return {
+        pausedPlan:
+            pausePlanResult,  
+    };
+}

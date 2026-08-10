@@ -2,6 +2,7 @@ import { createPlan } from "./createPlan.js";
 import {
     registerMerchant,
 } from "./merchant.js";
+import { pausePlan } from "./pausePlan.js";
 import { updatePlan } from "./updatePlan.js";
 import { type UpdatePlanResult } from "@stripe-for-web3/sdk";
 
@@ -52,9 +53,7 @@ async function main() {
                 7500000n,
         };
 
-    console.log("updatedPremiumPlan: ", updatedPremiumPlan);
-
-    const {updatedPlan}= await updatePlan(
+     const {updatedPlan}= await updatePlan(
         plans.premium.plan, 
         updatedPremiumPlan
     )
@@ -63,6 +62,19 @@ async function main() {
         "Updated Premium:",
         updatedPlan.plan,
     );
+
+    /// Pausing a plan
+
+    const { pausedPlan }= await pausePlan(
+        updatedPlan.plan
+    )
+
+    console.log(
+        "Paused Premium Plan:",
+        pausedPlan,
+    );
+
+
     
 }
 

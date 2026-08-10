@@ -26,6 +26,8 @@ export async function mirror<T>({
             },
 
             body: JSON.stringify(body),
+
+            cache: "no-store"
         },
     );
 

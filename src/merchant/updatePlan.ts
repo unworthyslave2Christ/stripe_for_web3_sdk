@@ -516,7 +516,7 @@ export async function updatePlan({
       apiUrl: client.apiUrl,
 
       endpoint:
-          `/api/v1/plans/${updatedPlan.planId}`,
+          `/api/v1/plans?planId=${updatedPlan.planId}`,
 
       method: "PATCH",
 
