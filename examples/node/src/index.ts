@@ -1,6 +1,8 @@
 import { archivePlan } from "./archivePlan.js";
 import { createPlan } from "./createPlan.js";
+import { getMerchantById } from "./getMerchantById.js";
 import { getPlan } from "./getPlan.js";
+import { getPlans } from "./getPlans.js";
 import {
     registerMerchant,
 } from "./merchant.js";
@@ -101,15 +103,36 @@ async function main() {
 
     // Getting a unique plan
 
-    const {plan}  = await getPlan(
+    const {plan: getPlanResult}  = await getPlan(
         resumedPlan.plan.planId
     );
 
     console.log(
         "Plan name",
-       plan.name
+       getPlanResult.name
     );
 
+    const MERCHANT_ID = 1;
+
+    // Getting a unique merchant
+    const {merchant: returnedMerchantRecord}  = await getMerchantById(
+        MERCHANT_ID
+    );
+
+    console.log(
+        "Returned Merchant Record",
+       returnedMerchantRecord
+    );
+
+
+    // Getting  plans for merchant 1
+    const {plans: getPlansResults}  = await getPlans(
+        MERCHANT_ID
+    );
+
+    getPlansResults.forEach(p => {
+        console.log("Plan id: ", p.planId);
+    })
     
 }
 

@@ -206,7 +206,7 @@ export async function getPlans({
     ////////////////////////////////////////////////////////////
 
     const response = await fetch(
-        `${client.apiUrl}/plans?merchantId=${merchantId}`,
+        `${client.apiUrl}/api/v1/plans?merchantId=${merchantId}`,
         {
             method: "GET",
 

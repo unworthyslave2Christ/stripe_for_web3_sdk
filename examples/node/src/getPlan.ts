@@ -20,7 +20,7 @@ export async function getPlan(
         !Number.isInteger(planId) && planId >=0
     ) {
         throw new Error(
-            "Plan should be a non-negative integer.",
+            "PlanId should be a non-negative integer.",
         );
     }
 

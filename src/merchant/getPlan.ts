@@ -139,8 +139,30 @@ export async function getPlan({
       }
     | GetPlanApiResponse;
 
-  const data = "plan" in body && body.plan ? body.plan : body;
+  let data:
+        GetPlanApiResponse | undefined;
 
+
+    ////////////////////////////////////////////////////////////
+    // COLLECTION RESPONSE
+    ////////////////////////////////////////////////////////////
+
+    if (
+        "plans" in body &&
+        Array.isArray(body.plans)
+    ) {
+
+        if (body.plans.length === 0) {
+            throw new Error(
+                `Billing plan ${planId} was not found.`,
+            );
+        }
+
+        data =
+            body.plans[0];
+    }
+
+    
   ////////////////////////////////////////////////////////////
   // NORMALIZE
   ////////////////////////////////////////////////////////////
