@@ -1,3 +1,4 @@
+import { archivePlan } from "./archivePlan.js";
 import { createPlan } from "./createPlan.js";
 import {
     registerMerchant,
@@ -78,12 +79,23 @@ async function main() {
     // Resuming paused plan
 
     const {resumedPlan} = await resumePlan(
-        updatedPlan.plan
+        pausedPlan.plan
     );
 
     console.log(
         "Resumed paused premium plan:",
         resumedPlan
+    );
+
+    // Archive the resumed paused plan
+
+    const {archivedPlan} = await archivePlan(
+        resumedPlan.plan
+    );
+
+    console.log(
+        "Archived resumed paused premium plan:",
+        archivedPlan
     );
 
 

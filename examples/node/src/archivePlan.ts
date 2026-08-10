@@ -1,0 +1,41 @@
+// src/archivePlan.ts
+
+import { stripe } from "./config.js";
+
+import { PlanRecord } from "@stripe-for-web3/sdk";
+
+////////////////////////////////////////////////////////////
+// UPDATE PLAN
+////////////////////////////////////////////////////////////
+
+export async function archivePlan(
+    plan: PlanRecord,
+) {
+
+    ////////////////////////////////////////////////////////////
+    // VALIDATION
+    ////////////////////////////////////////////////////////////
+
+    if (
+        !plan.planId 
+    ) {
+        throw new Error(
+            "Plan must have a planId.",
+        );
+    }
+
+    
+
+    const archivePlanResult = await stripe.merchant.archivePlan(
+        plan
+    );
+
+    ////////////////////////////////////////////////////////////
+    // RESULT
+    ////////////////////////////////////////////////////////////
+
+    return {
+        archivedPlan:
+            archivePlanResult,  
+    };
+}

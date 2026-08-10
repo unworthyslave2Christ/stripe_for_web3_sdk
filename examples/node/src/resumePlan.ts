@@ -1,9 +1,5 @@
 // src/resumePlan.ts
 
-import type {
-    Address,
-} from "viem";
-
 import { stripe } from "./config.js";
 
 import { PlanRecord } from "@stripe-for-web3/sdk";
