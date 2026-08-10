@@ -9,6 +9,8 @@ import type {
   TrialPeriodNamed,
 } from "../types/Plan";
 
+
+
 ////////////////////////////////////////////////////////////
 // INPUT
 ////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ export interface GetPlanParams {
 // API RESPONSE
 ////////////////////////////////////////////////////////////
 
-interface PlanApiResponse {
+export interface GetPlanApiResponse {
   plan_id: number;
 
   merchant_id: number;
@@ -105,7 +107,7 @@ export async function getPlan({
   // REQUEST
   ////////////////////////////////////////////////////////////
 
-  const response = await fetch(`${client.apiUrl}/api/v1/plans/${planId}`, {
+  const response = await fetch(`${client.apiUrl}/api/v1/plans?planId=${planId}`, {
     method: "GET",
 
     headers: {
@@ -133,9 +135,9 @@ export async function getPlan({
 
   const body = (await response.json()) as
     | {
-        plan?: PlanApiResponse;
+        plan?: GetPlanApiResponse;
       }
-    | PlanApiResponse;
+    | GetPlanApiResponse;
 
   const data = "plan" in body && body.plan ? body.plan : body;
 
@@ -143,7 +145,7 @@ export async function getPlan({
   // NORMALIZE
   ////////////////////////////////////////////////////////////
 
-  return normalizePlan(data as PlanApiResponse);
+  return normalizePlan(data as GetPlanApiResponse) as PlanRecord;
 }
 
 ////////////////////////////////////////////////////////////
@@ -154,7 +156,7 @@ export async function getPlan({
  * Converts the backend/Supabase representation into
  * the canonical SDK PlanRecord representation.
  */
-function normalizePlan(input: PlanApiResponse): PlanRecord {
+function normalizePlan(input: GetPlanApiResponse): PlanRecord {
   return {
     planId: Number(input.plan_id),
 

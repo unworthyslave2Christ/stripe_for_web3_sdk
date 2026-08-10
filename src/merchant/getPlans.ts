@@ -9,44 +9,18 @@ import type {
     TrialPeriodNamed,
 } from "../types/Plan";
 
+import { GetPlanApiResponse } from "./getPlan";
+
 ////////////////////////////////////////////////////////////
 // API RESPONSE
 ////////////////////////////////////////////////////////////
 
-interface PlanApiResponse {
-    plan_id: number;
 
-    merchant_id: number;
 
-    payment_token: `0x${string}`;
 
-    amount: string;
-
-    billing_interval_seconds: number;
-
-    trial_period: number;
-
-    max_subscribers: number;
-
-    allow_renewal: boolean;
-
-    metadata_uri: string;
-
-    name: string;
-
-    status: string;
-
-    billing_period_named?: string;
-
-    trial_period_named?: string;
-
-    created_at: string;
-
-    updated_at: string;
-}
 
 interface PlansApiResponse {
-    plans: PlanApiResponse[];
+    plans: GetPlanApiResponse[];
 }
 
 ////////////////////////////////////////////////////////////
@@ -102,7 +76,7 @@ function normalizeDate(value: unknown): Date {
 ////////////////////////////////////////////////////////////
 
 function normalizePlan(
-    input: PlanApiResponse,
+    input: GetPlanApiResponse,
 ): PlanRecord {
     return {
         planId: Number(input.plan_id),
@@ -162,9 +136,9 @@ function normalizePlan(
 // RESPONSE TYPE GUARDS
 ////////////////////////////////////////////////////////////
 
-function isPlanApiResponse(
+function isGetPlanApiResponse(
     value: unknown,
-): value is PlanApiResponse {
+): value is GetPlanApiResponse {
     return (
         typeof value === "object" &&
         value !== null &&
@@ -175,12 +149,12 @@ function isPlanApiResponse(
     );
 }
 
-function isPlanApiResponseArray(
+function isGetPlanApiResponseArray(
     value: unknown,
-): value is PlanApiResponse[] {
+): value is GetPlanApiResponse[] {
     return (
         Array.isArray(value) &&
-        value.every(isPlanApiResponse)
+        value.every(isGetPlanApiResponse)
     );
 }
 
@@ -191,7 +165,7 @@ function isPlansApiResponse(
         typeof value === "object" &&
         value !== null &&
         "plans" in value &&
-        isPlanApiResponseArray(
+        isGetPlanApiResponseArray(
             value.plans,
         )
     );
@@ -274,7 +248,7 @@ export async function getPlans({
     // NORMALIZE RESPONSE SHAPE
     ////////////////////////////////////////////////////////////
 
-    let data: PlanApiResponse[];
+    let data: GetPlanApiResponse[];
 
     /*
      * Supported backend response:
@@ -294,7 +268,7 @@ export async function getPlans({
      * }
      */
 
-    if (isPlanApiResponseArray(body)) {
+    if (isGetPlanApiResponseArray(body)) {
         data = body;
     } else if (isPlansApiResponse(body)) {
         data = body.plans;
@@ -308,5 +282,5 @@ export async function getPlans({
     // NORMALIZE
     ////////////////////////////////////////////////////////////
 
-    return data.map(normalizePlan);
+    return data.map(normalizePlan) as PlanRecord[];
 }

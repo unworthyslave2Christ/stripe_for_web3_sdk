@@ -1,12 +1,13 @@
 import { archivePlan } from "./archivePlan.js";
 import { createPlan } from "./createPlan.js";
+import { getPlan } from "./getPlan.js";
 import {
     registerMerchant,
 } from "./merchant.js";
 import { pausePlan } from "./pausePlan.js";
 import { resumePlan } from "./resumePlan.js";
 import { updatePlan } from "./updatePlan.js";
-import { type UpdatePlanResult } from "@stripe-for-web3/sdk";
+import { PlanApiRecord, PlanRecord, type UpdatePlanResult } from "@stripe-for-web3/sdk";
 
 async function main() {
 
@@ -98,6 +99,16 @@ async function main() {
         archivedPlan
     );
 
+    // Getting a unique plan
+
+    const {plan}  = await getPlan(
+        resumedPlan.plan.planId
+    );
+
+    console.log(
+        "Plan name",
+       plan.name
+    );
 
     
 }
