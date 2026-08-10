@@ -3,6 +3,7 @@ import {
     registerMerchant,
 } from "./merchant.js";
 import { pausePlan } from "./pausePlan.js";
+import { resumePlan } from "./resumePlan.js";
 import { updatePlan } from "./updatePlan.js";
 import { type UpdatePlanResult } from "@stripe-for-web3/sdk";
 
@@ -72,6 +73,17 @@ async function main() {
     console.log(
         "Paused Premium Plan:",
         pausedPlan,
+    );
+
+    // Resuming paused plan
+
+    const {resumedPlan} = await resumePlan(
+        updatedPlan.plan
+    );
+
+    console.log(
+        "Resumed paused premium plan:",
+        resumedPlan
     );
 
 

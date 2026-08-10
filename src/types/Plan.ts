@@ -55,6 +55,55 @@ export interface PlanRecord {
     updatedAt: Date;
 }
 
+export interface PlanApiRecord {
+    planId: number;
+
+    merchantId: number;
+
+    paymentToken: `0x${string}`;
+
+    amount: string;
+
+    billingIntervalSeconds: number;
+
+    billingPeriodNamed?: BillingPeriodNamed;
+
+    trialPeriod: number;
+
+    trialPeriodNamed: TrialPeriodNamed;
+
+    name: string;
+
+    status: PlanStatus;
+
+    maxSubscribers: number;
+
+    allowRenewal: boolean;
+
+    metadataURI: string;
+
+    createdAt: Date;
+
+    updatedAt: Date;
+}
+
+export interface PlanApiResponse {
+    success: boolean;
+
+    plan: PlanApiRecord;
+
+    userOperation?: {
+        id?: string;
+        hash?: `0x${string}`;
+        status?: string;
+    };
+
+    error?: {
+        code: string;
+        message: string;
+    };
+}
+
 export interface  PlanMirrorResponse {
     plan?: PlanRecord;
     plan_id?: number;

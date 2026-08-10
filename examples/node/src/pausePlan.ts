@@ -1,4 +1,4 @@
-// src/updatePlan.ts
+// src/pausePlan.ts
 
 import type {
     Address,
