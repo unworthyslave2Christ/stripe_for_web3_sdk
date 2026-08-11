@@ -1,6 +1,6 @@
 // src/pausePlan.ts
 
-import { stripe } from "./config.js";
+import { stripe } from "../config.js";
 
 import { PlanRecord } from "@stripe-for-web3/sdk";
 
@@ -8,8 +8,8 @@ import { PlanRecord } from "@stripe-for-web3/sdk";
 // UPDATE PLAN
 ////////////////////////////////////////////////////////////
 
-export async function getPlans(
-    merchantId: number,
+export async function getPlan(
+    planId: number,
 ) {
 
     ////////////////////////////////////////////////////////////
@@ -17,10 +17,10 @@ export async function getPlans(
     ////////////////////////////////////////////////////////////
 
     if (
-        !Number.isInteger(merchantId) && merchantId >=0
+        !Number.isInteger(planId) && planId >=0
     ) {
         throw new Error(
-            "MerchantId should be a non-negative integer.",
+            "PlanId should be a non-negative integer.",
         );
     }
 
@@ -31,18 +31,18 @@ export async function getPlans(
 
 
     try{
-        const getPlanResults = await stripe.merchant.getPlans(
-        merchantId
+        const getPlanResult = await stripe.merchant.getPlan(
+        planId
         );
 
         return {
-                plans:
-                    getPlanResults,  
+                plan:
+                    getPlanResult,  
             };
     } catch (err){
         console.error(err);
         return {
-            plans: {} as PlanRecord[]
+            plan: {} as PlanRecord
         }
     }
 

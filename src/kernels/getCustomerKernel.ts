@@ -595,7 +595,7 @@ function normalizeCustomer(input: any): CustomerRecord {
   }
 
   return {
-    customerId: Number(input.customerId ?? input.customer_id),
+    customerId: input.customerId ?? input.customer_id,
 
     ownerWallet: input.ownerWallet ?? input.owner_wallet,
 

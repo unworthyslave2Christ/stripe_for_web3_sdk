@@ -121,7 +121,7 @@ export class MerchantClient {
     // MERCHANT
     ////////////////////////////////////////////////////////////
 
-    async geMerchantById(
+    async getById(
         merchantId: number,
     ): Promise<MerchantRecord> {
         if (!this.apiUrl) {

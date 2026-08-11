@@ -21,6 +21,8 @@ import { cancelSubscription } from "./cancelSubscription";
 import { getSubscription } from "./getSubscription";
 import { getSubscriptions } from "./getSubscriptions";
 
+import { getCustomerByWallet } from "./getCustomerByWallet";
+
 ////////////////////////////////////////////////////////////
 // API RESPONSE
 ////////////////////////////////////////////////////////////
@@ -116,6 +118,19 @@ export class CustomerClient {
   // CUSTOMER
   ////////////////////////////////////////////////////////////
 
+  async getByWallet(
+        ownerWallet: Address,
+  ): Promise<CustomerRecord> {
+
+      return getCustomerByWallet({
+
+          client: this,
+
+          ownerWallet,
+      });
+  }
+    
+  
   async getById(customerId: number): Promise<CustomerRecord> {
     if (!this.apiUrl) {
       throw new Error("Customer API URL is not configured.");

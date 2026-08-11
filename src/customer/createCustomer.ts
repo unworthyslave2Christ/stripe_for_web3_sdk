@@ -6,30 +6,33 @@ import type { CustomerApiResponse, CustomerRecord } from "../types/Customer";
 
 import type { CustomerClient } from "./CustomerClient";
 
+import { createCustomerKernel } from "../kernels/getCustomerKernel";
+
 import {
-    createCustomerKernel,
-} from "../kernels/getCustomerKernel";
+  normalizeDate,
+  getCustomerByWallet,
+  type GetCustomerByWalletParams,
+} from "./getCustomerByWallet";
 
 ////////////////////////////////////////////////////////////
 // INPUT
 ////////////////////////////////////////////////////////////
 
 export interface CreateCustomerParams {
+  /**
+   * Merchant SDK customer client.
+   */
+  client: CustomerClient;
 
-    /**
-     * Merchant SDK customer client.
-     */
-    client: CustomerClient;
+  /**
+   * Customer display name.
+   */
+  displayName: string;
 
-    /**
-     * Customer display name.
-     */
-    displayName: string;
-
-    /**
-     * Customer email.
-     */
-    email: string;
+  /**
+   * Customer email.
+   */
+  email: string;
 }
 
 ////////////////////////////////////////////////////////////
@@ -37,18 +40,17 @@ export interface CreateCustomerParams {
 ////////////////////////////////////////////////////////////
 
 export interface CreateCustomerResult {
+  customer: CustomerRecord;
 
-    customer: CustomerRecord;
+  customerId: string;
 
-    customerId: number;
+  smartAccount: Address;
 
-    smartAccount: Address;
+  alreadyRegistered: boolean;
 
-    alreadyRegistered: boolean;
+  sessionPrivateKey: `0x${string}`;
 
-    sessionPrivateKey: `0x${string}`;
-
-    serializedPermissionAccount: string;
+  serializedPermissionAccount: string;
 }
 
 ////////////////////////////////////////////////////////////
@@ -56,342 +58,179 @@ export interface CreateCustomerResult {
 ////////////////////////////////////////////////////////////
 
 export async function createCustomer({
-    client,
-    displayName,
-    email,
+  client,
+  displayName,
+  email,
 }: CreateCustomerParams): Promise<CreateCustomerResult> {
+  ////////////////////////////////////////////////////////////
+  // CONFIGURATION
+  ////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////
-    // CONFIGURATION
-    ////////////////////////////////////////////////////////////
+  if (!client.apiUrl) {
+    throw new Error("Customer API URL is not configured.");
+  }
 
-    if (!client.apiUrl) {
+  ////////////////////////////////////////////////////////////
+  // CONNECTED WALLET
+  ////////////////////////////////////////////////////////////
 
-        throw new Error(
-            "Customer API URL is not configured.",
-        );
-    }
+  const ownerWallet = client.walletClient.account?.address as Address;
 
-    ////////////////////////////////////////////////////////////
-    // CONNECTED WALLET
-    ////////////////////////////////////////////////////////////
+  if (!ownerWallet) {
+    throw new Error("Unable to determine customer owner wallet.");
+  }
 
-    const ownerWallet =
-        client.walletClient
-            .account?.address as Address;
+  console.log("Customer owner wallet:", ownerWallet);
 
-    if (!ownerWallet) {
+  ////////////////////////////////////////////////////////////
+  // CHECK EXISTING CUSTOMER
+  ////////////////////////////////////////////////////////////
 
-        throw new Error(
-            "Unable to determine customer owner wallet.",
-        );
-    }
+  try {
+    const existingCustomer = await getCustomerByWallet({
+      client,
+      ownerWallet,
+    });
 
-    console.log(
-        "Customer owner wallet:",
-        ownerWallet,
-    );
+    if (existingCustomer) {
+      return {
+        customer: existingCustomer,
 
-    ////////////////////////////////////////////////////////////
-    // CHECK EXISTING CUSTOMER
-    ////////////////////////////////////////////////////////////
+        customerId: existingCustomer.customerId,
 
-    try {
+        smartAccount: existingCustomer.smartAccount,
 
-        const existingCustomer =
-            await getCustomerByWallet(
-                client.apiUrl,
-                ownerWallet,
-            );
-
-        if (existingCustomer) {
-
-            return {
-
-                customer:
-                    existingCustomer,
-
-                customerId:
-                    existingCustomer.customerId,
-
-                smartAccount:
-                    existingCustomer.smartAccount,
-
-                alreadyRegistered:
-                    true,
-
-                /*
-                 * Existing customers will eventually
-                 * recover their encrypted session
-                 * credentials rather than creating
-                 * another Kernel.
-                 *
-                 * For the initial node implementation
-                 * registration is the creation path.
-                 */
-                sessionPrivateKey:
-                    "0x" as `0x${string}`,
-
-                serializedPermissionAccount:
-                    "",
-            };
-        }
-
-    } catch (error) {
+        alreadyRegistered: true,
 
         /*
-         * 404 means that the customer does not exist.
+         * Existing customers will eventually
+         * recover their encrypted session
+         * credentials rather than creating
+         * another Kernel.
          *
-         * Other API failures should not silently become
-         * "customer not found".
+         * For the initial node implementation
+         * registration is the creation path.
          */
+        sessionPrivateKey: "0x" as `0x${string}`,
 
-        if (
-            error instanceof Error &&
-            !error.message.includes(
-                "CUSTOMER_NOT_FOUND",
-            )
-        ) {
-
-            throw error;
-        }
+        serializedPermissionAccount: "",
+      };
     }
+  } catch (error) {
+    /*
+     * 404 means that the customer does not exist.
+     *
+     * Other API failures should not silently become
+     * "customer not found".
+     */
 
-    ////////////////////////////////////////////////////////////
-    // CREATE CUSTOMER KERNEL
-    ////////////////////////////////////////////////////////////
-
-    const {
-
-        smartAccount,
-
-        sessionPrivateKey,
-
-        serializedPermissionAccount,
-
-    } =
-        await createCustomerKernel({
-
-            ownerWalletClient:
-                client.walletClient,
-
-            publicClient:
-                client.publicClient,
-        });
-
-    ////////////////////////////////////////////////////////////
-    // MIRROR CUSTOMER
-    ////////////////////////////////////////////////////////////
-
-    const response = await fetch(
-        `${client.apiUrl}/api/v1/customers`,
-        {
-            method: "POST",
-
-            headers: {
-                "Content-Type":
-                    "application/json",
-
-                Accept:
-                    "application/json",
-            },
-
-            body: JSON.stringify({
-
-                wallet:
-                    ownerWallet,
-
-                smartAccount,
-
-                displayName,
-
-                email,
-
-                sessionPrivateKey,
-
-                serializedPermissionAccount,
-
-            }),
-        },
-    );
-
-    
-    const body =
-        await response.json() as CustomerApiResponse;
-
-    ////////////////////////////////////////////////////////////
-    // API ERROR
-    ////////////////////////////////////////////////////////////
-
-    if (!response.ok) {
-
-        throw new Error(
-            body?.error ??
-            "Unable to register customer.",
-        );
+    if (
+      error instanceof Error &&
+      !error.message.includes("CUSTOMER_NOT_FOUND")
+    ) {
+      throw error;
     }
+  }
 
-    ////////////////////////////////////////////////////////////
-    // NORMALIZE
-    ////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // CREATE CUSTOMER KERNEL
+  ////////////////////////////////////////////////////////////
 
-    const customer =
-        normalizeCustomer(
-            body.customer ??
-            body,
-        );
+  const {
+    smartAccount,
 
-    ////////////////////////////////////////////////////////////
-    // RESULT
-    ////////////////////////////////////////////////////////////
+    sessionPrivateKey,
 
-    return {
+    serializedPermissionAccount,
+  } = await createCustomerKernel({
+    ownerWalletClient: client.walletClient,
 
-        customer,
+    publicClient: client.publicClient,
+  });
 
-        customerId:
-            customer.customerId,
+  ////////////////////////////////////////////////////////////
+  // MIRROR CUSTOMER
+  ////////////////////////////////////////////////////////////
 
-        smartAccount:
-            customer.smartAccount,
+  const response = await fetch(`${client.apiUrl}/api/v1/customers`, {
+    method: "POST",
 
-        alreadyRegistered:
-            false,
+    headers: {
+      "Content-Type": "application/json",
 
-        sessionPrivateKey,
+      Accept: "application/json",
+    },
 
-        serializedPermissionAccount,
-    };
-}
+    body: JSON.stringify({
+      wallet: ownerWallet,
 
-////////////////////////////////////////////////////////////
-// GET CUSTOMER BY WALLET
-////////////////////////////////////////////////////////////
+      smartAccount,
 
-async function getCustomerByWallet(
-    apiUrl: string,
-    ownerWallet: Address,
-): Promise<CustomerRecord> {
+      displayName,
 
-    // const baseUrl =
-    //     apiUrl.replace(/\/+$/, "");
+      email,
 
-    const response =
-        await fetch(
-            `${apiUrl}/api/v1/customers/owner/${ownerWallet}`,
-            {
-                method: "GET",
+      sessionPrivateKey,
 
-                headers: {
-                    Accept:
-                        "application/json",
-                },
+      serializedPermissionAccount,
+    }),
+  });
 
-                cache:
-                    "no-store",
-            },
-        );
+  const body = (await response.json()) as CustomerApiResponse;
 
-    if (response.status === 404) {
+  ////////////////////////////////////////////////////////////
+  // API ERROR
+  ////////////////////////////////////////////////////////////
 
-        throw new Error(
-            "CUSTOMER_NOT_FOUND",
-        );
-    }
+  if (!response.ok) {
+    throw new Error(body?.error ?? "Unable to register customer.");
+  }
 
-    const body =
-        await response.json() as CustomerApiResponse;
+  ////////////////////////////////////////////////////////////
+  // NORMALIZE
+  ////////////////////////////////////////////////////////////
 
-    if (!response.ok) {
+  const customer = normalizeCustomer(body.customer ?? body);
 
-        throw new Error(
-            body?.error ??
-            "Unable to retrieve customer.",
-        );
-    }
+  ////////////////////////////////////////////////////////////
+  // RESULT
+  ////////////////////////////////////////////////////////////
 
-    return normalizeCustomer(
-        body.customer ??
-        body,
-    );
+  return {
+    customer,
+
+    customerId: customer.customerId,
+
+    smartAccount: customer.smartAccount,
+
+    alreadyRegistered: false,
+
+    sessionPrivateKey,
+
+    serializedPermissionAccount,
+  };
 }
 
 ////////////////////////////////////////////////////////////
 // NORMALIZATION
 ////////////////////////////////////////////////////////////
 
-function normalizeCustomer(
-    input: any,
-): CustomerRecord {
+function normalizeCustomer(input: any): CustomerRecord {
+  return {
+    customerId: input.customerId ?? input.customer_id,
 
-    return {
+    ownerWallet: input.ownerWallet ?? input.owner_wallet,
 
-        customerId:
-            Number(
-                input.customerId ??
-                input.customer_id,
-            ),
+    smartAccount: input.smartAccount ?? input.smart_account,
 
-        ownerWallet:
-            input.ownerWallet ??
-            input.owner_wallet,
+    displayName: input.displayName ?? input.display_name,
 
-        smartAccount:
-            input.smartAccount ??
-            input.smart_account,
+    email: input.email,
 
-        displayName:
-            input.displayName ??
-            input.display_name,
+    status: input.status ?? "ACTIVE",
 
-        email:
-            input.email,
+    createdAt: normalizeDate(input.createdAt ?? input.created_at),
 
-        status: 
-            input.status ??
-            "ACTIVE",
-
-        createdAt:
-            normalizeDate(
-                input.createdAt ??
-                input.created_at,
-            ),
-
-        updatedAt:
-            normalizeDate(
-                input.updatedAt ??
-                input.updated_at,
-            ),
-    };
-}
-
-////////////////////////////////////////////////////////////
-// DATE
-////////////////////////////////////////////////////////////
-
-function normalizeDate(
-    value: unknown,
-): Date {
-
-    if (value instanceof Date) {
-        return value;
-    }
-
-    const date =
-        new Date(
-            value as string | number,
-        );
-
-    if (
-        Number.isNaN(
-            date.getTime(),
-        )
-    ) {
-
-        throw new Error(
-            "Invalid customer timestamp.",
-        );
-    }
-
-    return date;
+    updatedAt: normalizeDate(input.updatedAt ?? input.updated_at),
+  };
 }

@@ -20,7 +20,7 @@ export interface CustomerRecord {
      * Canonical customer identifier assigned
      * by the backend.
      */
-    customerId: number;
+    customerId: string;
 
     /**
      * Wallet that owns the customer account.
@@ -91,9 +91,9 @@ export interface CustomerApiResponse {
     // IDENTIFIER
     ////////////////////////////////////////////////////////////
 
-    customer_id?: number;
+    customer_id?: string;
 
-    customerId?: number;
+    customerId?: string;
 
     ////////////////////////////////////////////////////////////
     // OWNER WALLET

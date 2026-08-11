@@ -17,7 +17,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "@stripe-for-web3/sdk": "file:..\\..\\stripe-for-web3-sdk-0.2.15.tgz",
+    "@stripe-for-web3/sdk": "file:..\\..\\stripe-for-web3-sdk-0.2.18.tgz",
     "@zerodev/ecdsa-validator": "^5",
     "@zerodev/sdk": "^5",
     "dotenv": "^17",
