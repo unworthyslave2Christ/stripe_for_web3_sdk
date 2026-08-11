@@ -14,102 +14,153 @@ import { waitForReceipt } from "../internal/waitForReceipt";
 
 import { mirror } from "../internal/mirror";
 
-export interface CancelSubscriptionParams {
-  client: CustomerClient;
+////////////////////////////////////////////////////////////
+// PARAMETERS
+////////////////////////////////////////////////////////////
 
-  subscription: SubscriptionRecord;
+export interface CancelSubscriptionParams {
+    client: CustomerClient;
+
+    subscription: SubscriptionRecord;
 }
 
+////////////////////////////////////////////////////////////
+// CANCEL SUBSCRIPTION
+////////////////////////////////////////////////////////////
+
 export async function cancelSubscription({
-  client,
-
-  subscription,
+    client,
+    subscription,
 }: CancelSubscriptionParams) {
-  ////////////////////////////////////////////////////////////
-  // Obtain Customer Kernel
-  ////////////////////////////////////////////////////////////
 
-  const {
-    customer,
+    ////////////////////////////////////////////////////////////
+    // CUSTOMER KERNEL
+    ////////////////////////////////////////////////////////////
 
-    kernel,
+    const {
+        customer,
 
-    kernelClient,
-  } = await getCustomerKernel({
-    walletClient: client.walletClient,
+        kernel,
 
-    publicClient: client.publicClient,
+        kernelClient,
 
-    customerResolver: client.customerResolver,
-  });
+    } = await getCustomerKernel({
 
-  ////////////////////////////////////////////////////////////
-  // Encode Billing Protocol Call
-  ////////////////////////////////////////////////////////////
+        walletClient:
+            client.walletClient,
 
-  const data = encodeBillingProtocolCall(
-    "cancelSubscription",
+        publicClient:
+            client.publicClient,
 
-    [BigInt(subscription.subscriptionId)],
-  );
+        apiUrl:
+            client.apiUrl,
 
-  ////////////////////////////////////////////////////////////
-  // Execute User Operation
-  ////////////////////////////////////////////////////////////
+    });
 
-  const userOpHash = await executeUserOperation({
-    kernel,
 
-    kernelClient,
+    ////////////////////////////////////////////////////////////
+    // ENCODE BILLING PROTOCOL CALL
+    ////////////////////////////////////////////////////////////
 
-    contractAddress: client.contractAddress!,
+    const data =
+        encodeBillingProtocolCall(
+            "cancelSubscription",
 
-    data,
-  });
+            [
+                BigInt(
+                    subscription.subscriptionId,
+                ),
+            ],
+        );
 
-  ////////////////////////////////////////////////////////////
-  // Wait For Receipt
-  ////////////////////////////////////////////////////////////
 
-  const receipt = await waitForReceipt({
-    kernelClient,
+    ////////////////////////////////////////////////////////////
+    // EXECUTE USER OPERATION
+    ////////////////////////////////////////////////////////////
 
-    userOperationHash: userOpHash,
-  });
+    const userOpHash =
+        await executeUserOperation({
 
-  ////////////////////////////////////////////////////////////
-  // Mirror Backend
-  ////////////////////////////////////////////////////////////
+            kernel,
 
-  await mirror({
-    apiUrl: client.apiUrl,
+            kernelClient,
 
-    endpoint: `/subscriptions/${subscription.subscriptionId}/cancel`,
+            contractAddress:
+                client.contractAddress,
 
-    body: {
-      subscriptionId: subscription.subscriptionId,
+            data,
 
-      status: "CANCELLED",
-    },
-  });
+        });
 
-  ////////////////////////////////////////////////////////////
-  // Return
-  ////////////////////////////////////////////////////////////
 
-  return {
-    customer,
+    ////////////////////////////////////////////////////////////
+    // WAIT FOR USER OPERATION RECEIPT
+    ////////////////////////////////////////////////////////////
 
-    subscription: {
-      ...subscription,
+    const receipt =
+        await waitForReceipt({
 
-      status: "CANCELLED",
-    },
+            kernelClient,
 
-    kernel,
+            userOperationHash:
+                userOpHash,
 
-    userOpHash,
+        });
 
-    receipt,
-  };
+
+    ////////////////////////////////////////////////////////////
+    // MIRROR BACKEND STATE
+    ////////////////////////////////////////////////////////////
+
+    await mirror({
+
+        apiUrl:
+            client.apiUrl,
+
+        endpoint:
+            `/api/v1/subscriptions/${subscription.subscriptionId}/cancel`,
+
+        body: {
+
+            subscriptionId:
+                subscription.subscriptionId,
+
+            status:
+                "CANCELLED",
+
+        },
+
+    });
+
+
+    ////////////////////////////////////////////////////////////
+    // RETURN
+    ////////////////////////////////////////////////////////////
+
+    return {
+
+        customer,
+
+        subscription: {
+
+            ...subscription,
+
+            status:
+                "CANCELLED",
+
+            cancelledAt:
+                Math.floor(
+                    Date.now() / 1000,
+                ),
+
+        },
+
+        kernel,
+
+        userOpHash,
+
+        receipt,
+
+    };
+
 }

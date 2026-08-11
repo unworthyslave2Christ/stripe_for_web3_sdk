@@ -1,107 +1,207 @@
-// // src/customer/CustomerClient.ts
+// src/customer/CustomerClient.ts
 
-// import type { PublicClient, WalletClient } from "viem";
+import type { Address, PublicClient, WalletClient } from "viem";
 
-// import type { SubscriptionRecord } from "../types/Subscription";
+import type { CustomerRecord } from "../types/Customer";
 
-// // import type { CustomerResolver } from "../kernels/getCustomerKernel";
+import type { SubscriptionRecord } from "../types/Subscription";
 
-// import { subscribe } from "./subscribe";
+import {
+  createCustomer,
+  type CreateCustomerParams,
+  type CreateCustomerResult,
+} from "./createCustomer";
 
-// import { pauseSubscription } from "./pauseSubscription";
+import { subscribe, type SubscribeParams } from "./subscribe";
 
-// import { resumeSubscription } from "./resumeSubscription";
+import { pauseSubscription } from "./pauseSubscription";
+import { resumeSubscription } from "./resumeSubscription";
+import { cancelSubscription } from "./cancelSubscription";
 
-// import { cancelSubscription } from "./cancelSubscription";
+import { getSubscription } from "./getSubscription";
+import { getSubscriptions } from "./getSubscriptions";
 
-// import { getSubscription } from "./getSubscription";
+////////////////////////////////////////////////////////////
+// API RESPONSE
+////////////////////////////////////////////////////////////
 
-// import { getSubscriptions } from "./getSubscriptions";
+export interface CustomerApiResponseMinimal {
+  customer?: CustomerRecord;
 
-// export interface CustomerClientConfig {
-//   walletClient: WalletClient;
+  error?: string;
+}
 
-//   publicClient: PublicClient;
+////////////////////////////////////////////////////////////
+// CONFIGURATION
+////////////////////////////////////////////////////////////
 
-//   // customerResolver: CustomerResolver;
+export interface CustomerClientConfig {
+  /**
+   * Wallet used to identify and authorize
+   * the customer.
+   */
+  walletClient: WalletClient;
 
-//   contractAddress?: `0x${string}`;
+  /**
+   * Public blockchain client.
+   */
+  publicClient: PublicClient;
 
-//   apiUrl?: string;
-// }
+  /**
+   * Billing Protocol contract.
+   */
+  contractAddress: Address;
 
-// export class CustomerClient {
-//   readonly walletClient: WalletClient;
+  /**
+   * Backend API used for canonical
+   * customer/subscription persistence.
+   */
+  apiUrl: string;
+}
 
-//   readonly publicClient: PublicClient;
+////////////////////////////////////////////////////////////
+// REGISTRATION INPUT
+////////////////////////////////////////////////////////////
 
-//   // readonly customerResolver: CustomerResolver;
+export interface RegisterCustomerInput {
+  /**
+   * Human-readable customer name.
+   */
+  displayName: string;
 
-//   readonly contractAddress?: `0x${string}`;
+  /**
+   * Customer email.
+   */
+  email: string;
+}
 
-//   readonly apiUrl?: string;
+////////////////////////////////////////////////////////////
+// CLIENT
+////////////////////////////////////////////////////////////
 
-//   constructor(config: CustomerClientConfig) {
-//     this.walletClient = config.walletClient;
+export class CustomerClient {
+  readonly walletClient: WalletClient;
 
-//     this.publicClient = config.publicClient;
+  readonly publicClient: PublicClient;
 
-//     // this.customerResolver = config.customerResolver;
+  readonly contractAddress: Address;
 
-//     this.contractAddress = config.contractAddress;
+  readonly apiUrl: string;
 
-//     this.apiUrl = config.apiUrl;
-//   }
+  constructor(config: CustomerClientConfig) {
+    this.walletClient = config.walletClient;
 
-//   ////////////////////////////////////////////////////////////
-//   // SUBSCRIPTIONS
-//   ////////////////////////////////////////////////////////////
+    this.publicClient = config.publicClient;
 
-//   subscribe(subscription: SubscriptionRecord) {
-//     return subscribe({
-//       client: this,
+    this.contractAddress = config.contractAddress;
 
-//       subscription,
-//     });
-//   }
+    this.apiUrl = config.apiUrl;
+  }
 
-//   pauseSubscription(subscription: SubscriptionRecord) {
-//     return pauseSubscription({
-//       client: this,
+  ////////////////////////////////////////////////////////////
+  // CUSTOMER REGISTRATION
+  ////////////////////////////////////////////////////////////
 
-//       subscription,
-//     });
-//   }
+  async register(input: RegisterCustomerInput): Promise<CreateCustomerResult> {
+    return createCustomer({
+      client: this,
 
-//   resumeSubscription(subscription: SubscriptionRecord) {
-//     return resumeSubscription({
-//       client: this,
+      displayName: input.displayName,
 
-//       subscription,
-//     });
-//   }
+      email: input.email,
+    });
+  }
 
-//   cancelSubscription(subscription: SubscriptionRecord) {
-//     return cancelSubscription({
-//       client: this,
+  ////////////////////////////////////////////////////////////
+  // CUSTOMER
+  ////////////////////////////////////////////////////////////
 
-//       subscription,
-//     });
-//   }
+  async getById(customerId: number): Promise<CustomerRecord> {
+    if (!this.apiUrl) {
+      throw new Error("Customer API URL is not configured.");
+    }
 
-//   getSubscription(subscriptionId: number) {
-//     return getSubscription({
-//       client: this,
+    const response = await fetch(
+      `${this.apiUrl}/api/v1/customers/${customerId}`,
+      {
+        method: "GET",
 
-//       subscriptionId,
-//     });
-//   }
+        headers: {
+          Accept: "application/json",
+        },
 
-//   getSubscriptions(customerId: number) {
-//     return getSubscriptions({
-//       client: this,
+        cache: "no-store",
+      },
+    );
 
-//       customerId: customerId.toString(),
-//     });
-//   }
-// }
+    const body = (await response.json()) as CustomerApiResponseMinimal;
+
+    if (!response.ok) {
+      throw new Error(
+        body.error ?? `Unable to retrieve customer ${customerId}.`,
+      );
+    }
+
+    if (!body.customer) {
+      throw new Error(`Customer ${customerId} was not returned by the API.`);
+    }
+
+    return body.customer;
+  }
+
+  ////////////////////////////////////////////////////////////
+  // SUBSCRIPTIONS
+  ////////////////////////////////////////////////////////////
+
+  subscribe(params: Omit<SubscribeParams, "client">) {
+    return subscribe({
+      client: this,
+
+      ...params,
+    });
+  }
+
+  pauseSubscription(subscription: SubscriptionRecord) {
+    return pauseSubscription({
+      client: this,
+
+      subscription,
+    });
+  }
+
+  resumeSubscription(subscription: SubscriptionRecord) {
+    return resumeSubscription({
+      client: this,
+
+      subscription,
+    });
+  }
+
+  cancelSubscription(subscription: SubscriptionRecord) {
+    return cancelSubscription({
+      client: this,
+
+      subscription,
+    });
+  }
+
+  ////////////////////////////////////////////////////////////
+  // SUBSCRIPTION READS
+  ////////////////////////////////////////////////////////////
+
+  getSubscription(subscriptionId: number) {
+    return getSubscription({
+      client: this,
+
+      subscriptionId,
+    });
+  }
+
+  getSubscriptions(customerId: number) {
+    return getSubscriptions({
+      client: this,
+
+      customerId,
+    });
+  }
+}

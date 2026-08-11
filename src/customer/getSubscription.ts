@@ -2,84 +2,168 @@
 
 import type { CustomerClient } from "./CustomerClient";
 
-import type { SubscriptionRecord, SubscriptionStatus } from "../types/Subscription";
+import type {
+    SubscriptionRecord,
+    SubscriptionStatus,
+    SubscriptionApiResponse,
+} from "../types/Subscription";
 
-interface SubscriptionApiResponse {
-  subscription_id: number;
-
-  merchant_id: number;
-
-  plan_id: number;
-
-  customer_id: string;
-
-  smart_account: `0x${string}`;
-
-  permission_id: number;
-
-  status: string;
-
-  next_billing_time: string;
-
-  last_charged_at: string | null;
-
-  cancelled_at: string | null;
-
-  created_at: string;
-}
+////////////////////////////////////////////////////////////
+// PARAMETERS
+////////////////////////////////////////////////////////////
 
 export interface GetSubscriptionParams {
-  client: CustomerClient;
+    client: CustomerClient;
 
-  subscriptionId: number;
+    subscriptionId: number;
 }
 
+////////////////////////////////////////////////////////////
+// GET SUBSCRIPTION
+////////////////////////////////////////////////////////////
+
 export async function getSubscription({
-  client,
+    client,
 
-  subscriptionId,
+    subscriptionId,
 }: GetSubscriptionParams): Promise<SubscriptionRecord> {
-  const response = await fetch(
-    `${client.apiUrl ?? ""}/subscriptions/${subscriptionId}`,
 
-    {
-      method: "GET",
+    ////////////////////////////////////////////////////////////
+    // VALIDATE CLIENT
+    ////////////////////////////////////////////////////////////
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+    if (!client.apiUrl) {
+        throw new Error(
+            "Customer API URL is not configured.",
+        );
+    }
 
-      cache: "no-store",
-    },
-  );
+    ////////////////////////////////////////////////////////////
+    // VALIDATE SUBSCRIPTION ID
+    ////////////////////////////////////////////////////////////
 
-  if (!response.ok) {
-    throw new Error("Unable to retrieve subscription.");
-  }
+    if (
+        !Number.isInteger(subscriptionId) ||
+        subscriptionId <= 0
+    ) {
+        throw new Error(
+            "Invalid subscriptionId.",
+        );
+    }
 
-  const data = (await response.json()) as SubscriptionApiResponse;
+    ////////////////////////////////////////////////////////////
+    // REQUEST
+    ////////////////////////////////////////////////////////////
 
-  return {
-    subscriptionId: data.subscription_id,
+    const response = await fetch(
+        `${client.apiUrl}/api/v1/subscriptions/${subscriptionId}`,
+        {
+            method: "GET",
 
-    merchantId: data.merchant_id,
+            headers: {
+                Accept:
+                    "application/json",
+            },
 
-    planId: data.plan_id,
+            cache:
+                "no-store",
+        },
+    );
 
-    customerId: data.customer_id,
+    ////////////////////////////////////////////////////////////
+    // RESPONSE ERROR
+    ////////////////////////////////////////////////////////////
 
-    smartAccount: data.smart_account,
+    if (!response.ok) {
 
-    permissionId: data.permission_id.toString(),
+        let message =
+            `Unable to retrieve subscription ${subscriptionId}.`;
 
-    status: data.status as SubscriptionStatus,
+        try {
 
-    nextBillingTime: Number(data.next_billing_time),
+            const errorBody =
+                await response.json() as {
+                    error?: string;
+                };
 
-    lastChargedAt: Number(data.last_charged_at),
+            if (errorBody.error) {
+                message =
+                    errorBody.error;
+            }
 
-    cancelledAt: Number(data.cancelled_at),
+        } catch {
+            // Preserve default error message.
+        }
 
-    createdAt: Number(data.created_at),
-  };
+        throw new Error(message);
+    }
+
+    ////////////////////////////////////////////////////////////
+    // RESPONSE BODY
+    ////////////////////////////////////////////////////////////
+
+    const data =
+        await response.json() as SubscriptionApiResponse;
+
+    ////////////////////////////////////////////////////////////
+    // SUBSCRIPTION PRESENCE
+    ////////////////////////////////////////////////////////////
+
+    if (!data) {
+        throw new Error(
+            `Subscription ${subscriptionId} was not returned by the API.`,
+        );
+    }
+
+    ////////////////////////////////////////////////////////////
+    // NORMALIZE API RECORD
+    ////////////////////////////////////////////////////////////
+
+    return {
+        subscriptionId:
+            Number(data.subscription.subscriptionId),
+
+        customerId:
+            data.subscription.customerId.toString(),
+
+        merchantId:
+            Number(data.subscription.merchantId),
+
+        planId:
+            Number(data.subscription.planId),
+
+        smartAccount:
+            data.subscription.smartAccount,
+
+        permissionId:
+            data.subscription.permissionId.toString(),
+
+        status:
+            data.subscription.status as SubscriptionStatus,
+
+        nextBillingTime:
+            new Date(data.subscription.nextBillingTime),
+
+        lastChargedAt:
+            data.subscription.lastChargedAt === null ||
+            data.subscription.lastChargedAt=== undefined
+                ? null
+                : Number(
+                    data.subscription.lastChargedAt,
+                ),
+
+        cancelledAt:
+            data.subscription.cancelledAt === null ||
+            data.subscription.cancelledAt === undefined
+                ? null
+                : Number(
+                    data.subscription.cancelledAt,
+                ),
+
+        createdAt:
+            Number(data.subscription.createdAt),
+
+        transactionHash:
+            data.subscription.transactionHash,
+    };
 }
