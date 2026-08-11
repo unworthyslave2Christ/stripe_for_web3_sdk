@@ -1,138 +1,646 @@
-// import {
-//   createKernelAccountClient,
-//   createZeroDevPaymasterClient,
-// } from "@zerodev/sdk";
+// src/kernels/createCustomerKernel.ts
 
-// import { privateKeyToAccount } from "viem/accounts";
+import {
+  createKernelAccount,
+  createKernelAccountClient,
+  createZeroDevPaymasterClient,
+} from "@zerodev/sdk";
 
-// import { http, type Address, type PublicClient, type WalletClient } from "viem";
+import { getEntryPoint, KERNEL_V3_3 } from "@zerodev/sdk/constants";
 
-// import { arbitrumSepolia } from "viem/chains";
-// import { deserializePermissionAccount } from "@zerodev/permissions";
-// import { getEntryPoint, KERNEL_V3_3 } from "@zerodev/sdk/constants";
+import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 
-// import { toECDSASigner } from "@zerodev/permissions/signers";
+import { walletClientToSmartAccountSigner } from "permissionless";
 
-// const chain = arbitrumSepolia;
+import { http, type Address, type PublicClient, type WalletClient } from "viem";
 
-// const entryPoint = getEntryPoint("0.7");
+import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 
-// const kernelVersion = KERNEL_V3_3;
+import { toECDSASigner } from "@zerodev/permissions/signers";
 
-// const paymasterClient = createZeroDevPaymasterClient({
-//   chain,
+import {
+  deserializePermissionAccount,
+  serializePermissionAccount,
+  toInitConfig,
+  toPermissionValidator,
+} from "@zerodev/permissions";
 
-//   transport: http(process.env.PAYMASTER_RPC!),
-// });
+import { toSudoPolicy } from "@zerodev/permissions/policies";
 
-// export interface CustomerKernel {
-//   customer: any;
+import { arbitrumSepolia } from "viem/chains";
 
-//   kernel: any;
+import type { CustomerRecord } from "../types/Customer";
 
-//   kernelClient: any;
+////////////////////////////////////////////////////////////
+// CONFIGURATION
+////////////////////////////////////////////////////////////
 
-//   permissionId: bigint;
+const chain = arbitrumSepolia;
 
-//   permission: any;
-// }
+const entryPoint = getEntryPoint("0.7");
 
-// export interface CustomerResolverResult {
-//   customer: any;
+const kernelVersion = KERNEL_V3_3;
 
-//   serializedPermissionAccount: string;
+////////////////////////////////////////////////////////////
+// TYPES
+////////////////////////////////////////////////////////////
 
-//   sessionPrivateKey: Address;
+export interface CreateCustomerKernelParams {
+  /**
+   * Wallet used to establish ownership of the
+   * customer Kernel.
+   */
+  ownerWalletClient: WalletClient;
 
-//   permissionId: bigint;
+  /**
+   * Public blockchain client.
+   */
+  publicClient: PublicClient;
+}
 
-//   permission: any;
-// }
+////////////////////////////////////////////////////////////
+// RESULT
+////////////////////////////////////////////////////////////
 
-// export type CustomerResolver = (
-//   wallet: Address,
-// ) => Promise<CustomerResolverResult>;
+export interface CustomerKernelRegistration {
+  /**
+   * Customer Kernel / smart account.
+   */
+  smartAccount: Address;
 
-// export interface GetCustomerKernelParams {
-//   walletClient: WalletClient;
+  /**
+   * Random session private key generated for
+   * permission-based Kernel access.
+   */
+  sessionPrivateKey: `0x${string}`;
 
-//   publicClient: PublicClient;
+  /**
+   * Serialized ZeroDev permission account.
+   */
+  serializedPermissionAccount: string;
+}
 
-//   // customerResolver: CustomerResolver;
-// }
+////////////////////////////////////////////////////////////
+// CREATE CUSTOMER KERNEL
+////////////////////////////////////////////////////////////
 
-// export async function getCustomerKernel({
-//   walletClient,
+/**
+ * Creates a new customer Kernel.
+ *
+ * Workflow:
+ *
+ * 1. Convert the connected owner wallet into a
+ *    SmartAccountSigner.
+ *
+ * 2. Create the owner's ECDSA validator.
+ *
+ * 3. Generate a random session private key.
+ *
+ * 4. Create the session signer.
+ *
+ * 5. Create the permission validator.
+ *
+ * 6. Create the Kernel using the owner validator
+ *    as the sudo validator.
+ *
+ * 7. Attach the permission validator through
+ *    the Kernel initialization configuration.
+ *
+ * 8. Serialize the permission account so it can
+ *    later be recovered.
+ *
+ * The owner wallet remains the ultimate owner of
+ * the customer Kernel.
+ */
+export async function createCustomerKernel({
+  ownerWalletClient,
+  publicClient,
+}: CreateCustomerKernelParams): Promise<CustomerKernelRegistration> {
+  ////////////////////////////////////////////////////////////
+  // OWNER SIGNER
+  ////////////////////////////////////////////////////////////
 
-//   publicClient,
+  const ownerSigner = walletClientToSmartAccountSigner(
+    ownerWalletClient as any,
+  );
 
-//   // customerResolver,
-// }: GetCustomerKernelParams): Promise<CustomerKernel> {
-//   const [wallet] = await walletClient.getAddresses();
+  ////////////////////////////////////////////////////////////
+  // OWNER VALIDATOR
+  ////////////////////////////////////////////////////////////
 
-//   let {
-//     customer,
+  const ownerValidator = await signerToEcdsaValidator(publicClient, {
+    signer: ownerSigner as any,
 
-//     serializedPermissionAccount,
+    entryPoint,
 
-//     sessionPrivateKey,
+    kernelVersion,
+  });
 
-//     permissionId,
+  ////////////////////////////////////////////////////////////
+  // SESSION KEY
+  ////////////////////////////////////////////////////////////
 
-//     permission,
-//   } = await customerResolver(wallet);
+  /*
+   * Generate ONE random session private key.
+   *
+   * This key is not the customer's owner wallet.
+   *
+   * It is used by the permission account for
+   * subsequent Kernel operations.
+   */
+  const sessionPrivateKey = generatePrivateKey();
 
-//   customer = {
-//     ...customer,
+  const sessionAccount = privateKeyToAccount(sessionPrivateKey);
 
-//     smartAccount: customer.smart_account,
-//   };
+  ////////////////////////////////////////////////////////////
+  // SESSION SIGNER
+  ////////////////////////////////////////////////////////////
 
-//   const signer = await toECDSASigner({
-//     signer: privateKeyToAccount(sessionPrivateKey),
-//   });
+  const sessionSigner = await toECDSASigner({
+    signer: sessionAccount,
+  });
 
-//   const kernel = await deserializePermissionAccount(
-//     publicClient,
+  ////////////////////////////////////////////////////////////
+  // PERMISSION VALIDATOR
+  ////////////////////////////////////////////////////////////
 
-//     entryPoint,
+  const permissionValidator = await toPermissionValidator(publicClient, {
+    signer: sessionSigner,
 
-//     kernelVersion,
+    entryPoint,
 
-//     serializedPermissionAccount,
+    kernelVersion,
 
-//     signer,
-//   );
+    policies: [toSudoPolicy({})],
+  });
 
-//   if (kernel.address.toLowerCase() !== customer.smartAccount.toLowerCase()) {
-//     throw new Error("Kernel verification failed.");
-//   }
+  ////////////////////////////////////////////////////////////
+  // CREATE KERNEL
+  ////////////////////////////////////////////////////////////
 
-//   const kernelClient = createKernelAccountClient({
-//     account: kernel,
+  const kernel = await createKernelAccount(publicClient, {
+    entryPoint,
 
-//     chain,
+    kernelVersion,
 
-//     bundlerTransport: http(process.env.BUNDLER_RPC!),
+    plugins: {
+      sudo: ownerValidator,
+    },
 
-//     paymaster: {
-//       async getPaymasterData(userOperation) {
-//         return paymasterClient.sponsorUserOperation({
-//           userOperation,
-//         });
-//       },
-//     },
-//   });
+    initConfig: await toInitConfig(permissionValidator),
+  });
 
-//   return {
-//     customer,
+  ////////////////////////////////////////////////////////////
+  // SERIALIZE PERMISSION ACCOUNT
+  ////////////////////////////////////////////////////////////
 
-//     kernel,
+  const serializedPermissionAccount = await serializePermissionAccount(
+    kernel,
 
-//     kernelClient,
+    undefined,
 
-//     permissionId,
+    undefined,
 
-//     permission,
-//   };
-// }
+    undefined,
+
+    permissionValidator,
+  );
+
+  ////////////////////////////////////////////////////////////
+  // RESULT
+  ////////////////////////////////////////////////////////////
+
+  return {
+    smartAccount: kernel.address,
+
+    sessionPrivateKey,
+
+    serializedPermissionAccount,
+  };
+}
+
+////////////////////////////////////////////////////////////
+// GET CUSTOMER KERNEL
+////////////////////////////////////////////////////////////
+
+export interface GetCustomerKernelParams {
+  /**
+   * Connected customer owner wallet.
+   */
+  walletClient: WalletClient;
+
+  /**
+   * Public blockchain client.
+   */
+  publicClient: PublicClient;
+
+  /**
+   * Backend API URL.
+   */
+  apiUrl: string;
+}
+
+////////////////////////////////////////////////////////////
+// RESULT
+////////////////////////////////////////////////////////////
+
+export interface CustomerKernelResult {
+  /**
+   * Canonical customer record.
+   */
+  customer: CustomerRecord;
+
+  /**
+   * Reconstructed Kernel account.
+   */
+  kernel: any;
+
+  /**
+   * Kernel Account Client used to submit
+   * customer UserOperations.
+   */
+  kernelClient: any;
+
+  /**
+   * Permission identifier returned by the backend.
+   */
+  permissionId?: `0x${string}`;
+
+  /**
+   * Permission metadata returned by the backend.
+   */
+  permission?: unknown;
+}
+
+////////////////////////////////////////////////////////////
+// GET CUSTOMER KERNEL
+////////////////////////////////////////////////////////////
+
+/**
+ * Recovers an existing customer Kernel.
+ *
+ * Workflow:
+ *
+ * 1. Resolve the connected wallet.
+ *
+ * 2. Ask the backend for the customer's canonical
+ *    Kernel/permission information.
+ *
+ * 3. Recover the session signer from the returned
+ *    session private key.
+ *
+ * 4. Deserialize the permission account.
+ *
+ * 5. Verify that the reconstructed Kernel address
+ *    matches CustomerRecord.smartAccount.
+ *
+ * 6. Construct the Kernel Account Client.
+ *
+ * The backend is responsible for returning the
+ * customer's persisted Kernel information.
+ */
+
+
+////////////////////////////////////////////////////////////
+// GET CUSTOMER KERNEL
+////////////////////////////////////////////////////////////
+
+export interface GetCustomerKernelResponse {
+    customer: {
+        customer_id: number;
+
+        owner_wallet: `0x${string}`;
+
+        smart_account: `0x${string}`;
+
+        display_name: string;
+
+        email: string;
+
+        status: string;
+
+        created_at: string;
+
+        updated_at: string;
+    };
+
+    kernelAddress: `0x${string}`;
+
+    serializedPermissionAccount: string;
+
+    sessionPrivateKey: `0x${string}`;
+
+    permissionId?: `0x${string}`;
+
+    permission?: unknown;
+}
+
+
+export async function getCustomerKernel({
+  walletClient,
+  publicClient,
+  apiUrl,
+}: GetCustomerKernelParams): Promise<CustomerKernelResult> {
+  ////////////////////////////////////////////////////////////
+  // CONFIGURATION
+  ////////////////////////////////////////////////////////////
+
+  if (!apiUrl) {
+    throw new Error("Customer API URL is not configured.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // CONNECTED WALLET
+  ////////////////////////////////////////////////////////////
+
+  const [ownerWallet] = await walletClient.getAddresses();
+
+  if (!ownerWallet) {
+    throw new Error("Unable to determine connected customer wallet.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // REQUEST CUSTOMER KERNEL
+  ////////////////////////////////////////////////////////////
+
+  const response =
+        await fetch(
+            `${apiUrl}/api/v1/customers/kernel`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Accept:
+                        "application/json",
+                },
+
+                body:
+                    JSON.stringify({
+                        wallet:
+                            ownerWallet,
+                    }),
+
+                cache:
+                    "no-store",
+            },
+        );
+
+  ////////////////////////////////////////////////////////////
+  // RESPONSE ERROR
+  ////////////////////////////////////////////////////////////
+
+
+  if (!response.ok) {
+
+        let message =
+            "Unable to load customer Kernel.";
+
+        try {
+
+            const errorBody: unknown =
+                await response.json();
+
+            if (
+                typeof errorBody === "object" &&
+                errorBody !== null
+            ) {
+
+                const body =
+                    errorBody as {
+                        error?: unknown;
+                        message?: unknown;
+                    };
+
+                if (
+                    typeof body.error === "string"
+                ) {
+
+                    message =
+                        body.error;
+
+                } else if (
+                    typeof body.message === "string"
+                ) {
+
+                    message =
+                        body.message;
+
+                }
+
+            }
+
+        } catch {
+            // Preserve default error message.
+        }
+
+        throw new Error(message);
+    }
+
+  ////////////////////////////////////////////////////////////
+  // RESPONSE
+  ////////////////////////////////////////////////////////////
+
+  const body = await response.json() as GetCustomerKernelResponse;
+
+  ////////////////////////////////////////////////////////////
+  // CUSTOMER
+  ////////////////////////////////////////////////////////////
+
+  /*
+   * The backend should preferably return the
+   * canonical customer object.
+   *
+   * For compatibility with the existing frontend
+   * endpoint, normalize the snake_case response here.
+   */
+  const customer = normalizeCustomer(body.customer);
+
+  ////////////////////////////////////////////////////////////
+  // SESSION PRIVATE KEY
+  ////////////////////////////////////////////////////////////
+
+  const sessionPrivateKey = body.sessionPrivateKey;
+
+  if (!sessionPrivateKey) {
+    throw new Error("Customer session private key was not returned.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // SERIALIZED PERMISSION ACCOUNT
+  ////////////////////////////////////////////////////////////
+
+  const serializedPermissionAccount =
+    body.serializedPermissionAccount;
+
+  if (!serializedPermissionAccount) {
+    throw new Error("Serialized customer permission account was not returned.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // SESSION SIGNER
+  ////////////////////////////////////////////////////////////
+
+  const sessionAccount = privateKeyToAccount(sessionPrivateKey);
+
+  const sessionSigner = await toECDSASigner({
+    signer: sessionAccount,
+  });
+
+  ////////////////////////////////////////////////////////////
+  // DESERIALIZE PERMISSION ACCOUNT
+  ////////////////////////////////////////////////////////////
+
+  const kernel = await deserializePermissionAccount(
+    publicClient,
+
+    entryPoint,
+
+    kernelVersion,
+
+    serializedPermissionAccount,
+
+    sessionSigner,
+  );
+
+  ////////////////////////////////////////////////////////////
+  // VERIFY CUSTOMER KERNEL
+  ////////////////////////////////////////////////////////////
+
+  if (kernel.address.toLowerCase() !== customer.smartAccount.toLowerCase()) {
+    throw new Error("Customer Kernel verification failed.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // PAYMASTER
+  ////////////////////////////////////////////////////////////
+
+  const paymasterRpc =
+    process.env.PAYMASTER_RPC ?? process.env.NEXT_PUBLIC_PAYMASTER_RPC;
+
+  if (!paymasterRpc) {
+    throw new Error("Paymaster RPC is not configured.");
+  }
+
+  const paymasterClient = createZeroDevPaymasterClient({
+    chain,
+
+    transport: http(paymasterRpc),
+  });
+
+  ////////////////////////////////////////////////////////////
+  // BUNDLER
+  ////////////////////////////////////////////////////////////
+
+  const bundlerRpc =
+    process.env.BUNDLER_RPC ?? process.env.NEXT_PUBLIC_BUNDLER_RPC;
+
+  if (!bundlerRpc) {
+    throw new Error("Bundler RPC is not configured.");
+  }
+
+  ////////////////////////////////////////////////////////////
+  // KERNEL CLIENT
+  ////////////////////////////////////////////////////////////
+
+  const kernelClient = createKernelAccountClient({
+    account: kernel,
+
+    chain,
+
+    bundlerTransport: http(bundlerRpc),
+
+    paymaster: {
+      getPaymasterData(userOperation) {
+        return paymasterClient.sponsorUserOperation({
+          userOperation,
+        });
+      },
+    },
+  });
+
+  ////////////////////////////////////////////////////////////
+  // RESULT
+  ////////////////////////////////////////////////////////////
+
+  return {
+    customer,
+
+    kernel,
+
+    kernelClient,
+
+    permissionId: body.permissionId,
+
+    permission: body.permission,
+  };
+}
+
+////////////////////////////////////////////////////////////
+// CUSTOMER NORMALIZATION
+////////////////////////////////////////////////////////////
+
+/**
+ * Converts the backend representation of a customer
+ * into the canonical SDK CustomerRecord.
+ *
+ * This allows the SDK to consume either snake_case
+ * database responses or camelCase API responses.
+ */
+function normalizeCustomer(input: any): CustomerRecord {
+  if (!input) {
+    throw new Error("Customer record was not returned.");
+  }
+
+  return {
+    customerId: input.customerId ?? input.customer_id,
+
+    ownerWallet: input.ownerWallet ?? input.owner_wallet,
+
+    smartAccount: input.smartAccount ?? input.smart_account,
+
+    displayName: input.displayName ?? input.display_name ?? "",
+
+    email: input.email ?? "",
+
+    status: input.status ?? "ACTIVE",
+
+    createdAt: normalizeDate(input.createdAt ?? input.created_at),
+
+    updatedAt: normalizeDate(input.updatedAt ?? input.updated_at),
+  };
+}
+
+////////////////////////////////////////////////////////////
+// DATE NORMALIZATION
+////////////////////////////////////////////////////////////
+
+function normalizeDate(value: unknown): Date {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Invalid customer timestamp: ${value}`);
+    }
+
+    return date;
+  }
+
+  if (typeof value === "number") {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Invalid customer timestamp: ${value}`);
+    }
+
+    return date;
+  }
+
+  throw new Error("Customer timestamp is missing or invalid.");
+}

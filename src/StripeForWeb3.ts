@@ -8,7 +8,7 @@ import type {
 } from "viem";
 
 import { MerchantClient } from "./merchant";
-// import { CustomerClient } from "./customer";
+import { CustomerClient } from "./customer";
 import { WalletClient } from "./wallet";
 
 ////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ export interface StripeForWeb3Config {
 export class StripeForWeb3 {
     readonly merchant: MerchantClient;
 
-    // readonly customer: CustomerClient;
+    readonly customer: CustomerClient;
 
     readonly wallet: WalletClient;
 
@@ -80,15 +80,15 @@ export class StripeForWeb3 {
         // Customer
         //////////////////////////////////////////////////////////
 
-        // this.customer = new CustomerClient({
-        //     walletClient: config.walletClient,
+        this.customer = new CustomerClient({
+            walletClient: config.walletClient,
 
-        //     publicClient: config.publicClient,
+            publicClient: config.publicClient,
 
-        //     contractAddress: config.contractAddress,
+            contractAddress: config.contractAddress,
 
-        //     apiUrl: config.apiUrl,
-        // });
+            apiUrl: config.apiUrl!,
+        });
 
         // ////////////////////////////////////////////////////////////
         // // Wallet
@@ -103,7 +103,7 @@ export class StripeForWeb3 {
 
             contractAddress: config.contractAddress,
 
-            apiUrl: config.apiUrl,
+            apiUrl: config.apiUrl!,
         });
     }
 }

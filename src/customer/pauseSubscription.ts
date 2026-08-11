@@ -14,102 +14,205 @@ import { waitForReceipt } from "../internal/waitForReceipt";
 
 import { mirror } from "../internal/mirror";
 
-export interface PauseSubscriptionParams {
-  client: CustomerClient;
+////////////////////////////////////////////////////////////
+// INPUT
+////////////////////////////////////////////////////////////
 
-  subscription: SubscriptionRecord;
+export interface PauseSubscriptionParams {
+    /**
+     * Customer SDK client.
+     */
+    client: CustomerClient;
+
+    /**
+     * Subscription being paused.
+     */
+    subscription: SubscriptionRecord;
 }
 
+////////////////////////////////////////////////////////////
+// PAUSE SUBSCRIPTION
+////////////////////////////////////////////////////////////
+
 export async function pauseSubscription({
-  client,
-
-  subscription,
+    client,
+    subscription,
 }: PauseSubscriptionParams) {
-  ////////////////////////////////////////////////////////////
-  // Obtain Customer Kernel
-  ////////////////////////////////////////////////////////////
 
-  const {
-    customer,
+    ////////////////////////////////////////////////////////////
+    // CONFIGURATION
+    ////////////////////////////////////////////////////////////
 
-    kernel,
+    if (!client.contractAddress) {
+        throw new Error(
+            "Billing Protocol contract address is not configured.",
+        );
+    }
 
-    kernelClient,
-  } = await getCustomerKernel({
-    walletClient: client.walletClient,
+    if (!client.apiUrl) {
+        throw new Error(
+            "Customer API URL is not configured.",
+        );
+    }
 
-    publicClient: client.publicClient,
+    ////////////////////////////////////////////////////////////
+    // VALIDATE SUBSCRIPTION
+    ////////////////////////////////////////////////////////////
 
-    customerResolver: client.customerResolver,
-  });
+    if (
+        !Number.isInteger(
+            subscription.subscriptionId,
+        ) ||
+        subscription.subscriptionId <= 0
+    ) {
+        throw new Error(
+            "Invalid subscription ID.",
+        );
+    }
 
-  ////////////////////////////////////////////////////////////
-  // Encode Billing Protocol Call
-  ////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    // CURRENT STATE
+    ////////////////////////////////////////////////////////////
 
-  const data = encodeBillingProtocolCall(
-    "pauseSubscription",
+    if (
+        subscription.status === "PAUSED"
+    ) {
+        throw new Error(
+            `Subscription ${subscription.subscriptionId} is already paused.`,
+        );
+    }
 
-    [BigInt(subscription.subscriptionId)],
-  );
+    if (
+        subscription.status === "CANCELLED"
+    ) {
+        throw new Error(
+            `Subscription ${subscription.subscriptionId} is cancelled and cannot be paused.`,
+        );
+    }
 
-  ////////////////////////////////////////////////////////////
-  // Execute User Operation
-  ////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    // CUSTOMER KERNEL
+    ////////////////////////////////////////////////////////////
 
-  const userOpHash = await executeUserOperation({
-    kernel,
+    const {
+        customer,
+        kernel,
+        kernelClient,
+    } = await getCustomerKernel({
+        walletClient:
+            client.walletClient,
 
-    kernelClient,
+        publicClient:
+            client.publicClient,
 
-    contractAddress: client.contractAddress!,
+        apiUrl:
+            client.apiUrl,
+    });
 
-    data,
-  });
+    ////////////////////////////////////////////////////////////
+    // VERIFY CUSTOMER KERNEL
+    ////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////
-  // Wait For Receipt
-  ////////////////////////////////////////////////////////////
+    if (
+        kernel.address.toLowerCase() !==
+        customer.smartAccount.toLowerCase()
+    ) {
+        throw new Error(
+            "Customer Kernel verification failed.",
+        );
+    }
 
-  const receipt = await waitForReceipt({
-    kernelClient,
+    ////////////////////////////////////////////////////////////
+    // ENCODE BILLING PROTOCOL CALL
+    ////////////////////////////////////////////////////////////
 
-    userOperationHash: userOpHash,
-  });
+    const data =
+        encodeBillingProtocolCall(
+            "pauseSubscription",
+            [
+                BigInt(
+                    subscription.subscriptionId,
+                ),
+            ],
+        );
 
-  ////////////////////////////////////////////////////////////
-  // Mirror Backend
-  ////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    // EXECUTE USER OPERATION
+    ////////////////////////////////////////////////////////////
 
-  await mirror({
-    apiUrl: client.apiUrl,
+    const userOpHash =
+        await executeUserOperation({
+            kernel,
 
-    endpoint: `/subscriptions/${subscription.subscriptionId}/pause`,
+            kernelClient,
 
-    body: {
-      subscriptionId: subscription.subscriptionId,
+            contractAddress:
+                client.contractAddress,
 
-      status: "PAUSED",
-    },
-  });
+            data,
+        });
 
-  ////////////////////////////////////////////////////////////
-  // Return
-  ////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    // WAIT FOR USER OPERATION RECEIPT
+    ////////////////////////////////////////////////////////////
 
-  return {
-    customer,
+    const receipt =
+        await waitForReceipt({
+            kernelClient,
 
-    subscription: {
-      ...subscription,
+            userOperationHash:
+                userOpHash,
+        });
 
-      status: "PAUSED",
-    },
+    ////////////////////////////////////////////////////////////
+    // MIRROR BACKEND STATE
+    ////////////////////////////////////////////////////////////
 
-    kernel,
+    await mirror({
+        apiUrl:
+            client.apiUrl,
 
-    userOpHash,
+        endpoint:
+            `/api/v1/subscriptions/${subscription.subscriptionId}/pause`,
 
-    receipt,
-  };
+        body: {
+            subscriptionId:
+                subscription.subscriptionId,
+
+            customerId:
+                subscription.customerId,
+
+            status:
+                "PAUSED",
+        },
+    });
+
+    ////////////////////////////////////////////////////////////
+    // UPDATED SUBSCRIPTION RECORD
+    ////////////////////////////////////////////////////////////
+
+    const updatedSubscription:
+        SubscriptionRecord = {
+            ...subscription,
+
+            status:
+                "PAUSED",
+        };
+
+    ////////////////////////////////////////////////////////////
+    // RETURN
+    ////////////////////////////////////////////////////////////
+
+    return {
+        customer,
+
+        subscription:
+            updatedSubscription,
+
+        kernel,
+
+        userOpHash,
+
+        receipt,
+    };
 }

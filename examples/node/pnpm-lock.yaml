@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@stripe-for-web3/sdk':
-        specifier: file:..\..\stripe-for-web3-sdk-0.2.8.tgz
-        version: file:../../stripe-for-web3-sdk-0.2.8.tgz(@zerodev/ecdsa-validator@5.4.9(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2)))(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(@zerodev/webauthn-key@5.5.0(viem@2.55.11(typescript@7.0.2)))(permissionless@0.1.49(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2))
+        specifier: file:..\..\stripe-for-web3-sdk-0.2.18.tgz
+        version: file:../../stripe-for-web3-sdk-0.2.18.tgz(@zerodev/ecdsa-validator@5.4.9(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2)))(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(@zerodev/webauthn-key@5.5.0(viem@2.55.11(typescript@7.0.2)))(permissionless@0.1.49(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2))
       '@zerodev/ecdsa-validator':
         specifier: ^5
         version: 5.4.9(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2))
@@ -266,9 +266,9 @@ packages:
     resolution: {integrity: sha512-38xtca0OqfRVNloKBrFB5LEM6PN5vzFbJG6rAutPVrtGHFYxPdiV3btYWq0eAZAZmP+dqFPYJxJWeJrGfmYHng==}
     deprecated: This package has been renamed to @simplewebauthn/types. Please install @simplewebauthn/types instead to ensure you receive future updates.
 
-  '@stripe-for-web3/sdk@file:../../stripe-for-web3-sdk-0.2.8.tgz':
-    resolution: {integrity: sha512-ZNEN2c2YZzCpJ+LktieIhx136WqZGy9L5hZjCWvhO3/NKpdL+a2bdKjMzaifkilE6zi8q48p23nxNrumlk3hFQ==, tarball: file:../../stripe-for-web3-sdk-0.2.8.tgz}
-    version: 0.2.8
+  '@stripe-for-web3/sdk@file:../../stripe-for-web3-sdk-0.2.18.tgz':
+    resolution: {integrity: sha512-HVJ2kZ/WQ5sBeNlSND/bQzDB0em+wwyqk48wfY0k9n+LyGakUWPmN506gP+ZqEegTzFdUr4IJL+Qrfoj+4OnoQ==, tarball: file:../../stripe-for-web3-sdk-0.2.18.tgz}
+    version: 0.2.18
     engines: {node: '>=20'}
     peerDependencies:
       '@zerodev/ecdsa-validator': ^5.4.9
@@ -755,7 +755,7 @@ snapshots:
 
   '@simplewebauthn/typescript-types@8.3.4': {}
 
-  '@stripe-for-web3/sdk@file:../../stripe-for-web3-sdk-0.2.8.tgz(@zerodev/ecdsa-validator@5.4.9(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2)))(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(@zerodev/webauthn-key@5.5.0(viem@2.55.11(typescript@7.0.2)))(permissionless@0.1.49(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2))':
+  '@stripe-for-web3/sdk@file:../../stripe-for-web3-sdk-0.2.18.tgz(@zerodev/ecdsa-validator@5.4.9(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2)))(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(@zerodev/webauthn-key@5.5.0(viem@2.55.11(typescript@7.0.2)))(permissionless@0.1.49(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2))':
     dependencies:
       '@supabase/supabase-js': 2.112.2
       '@zerodev/ecdsa-validator': 5.4.9(@zerodev/sdk@5.5.10(viem@2.55.11(typescript@7.0.2)))(viem@2.55.11(typescript@7.0.2))

@@ -328,7 +328,6 @@ export async function getMerchantKernel( params : GetMerchantKernelParams): Prom
 
     const kernel =
         await createMerchantKernel({
-
             ownerWalletClient:
                 params.walletClient,
 

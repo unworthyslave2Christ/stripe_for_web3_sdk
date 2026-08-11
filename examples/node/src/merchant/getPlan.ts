@@ -1,10 +1,6 @@
-// src/resumePlan.ts
+// src/pausePlan.ts
 
-import type {
-    Address,
-} from "viem";
-
-import { stripe } from "./config.js";
+import { stripe } from "../config.js";
 
 import { PlanRecord } from "@stripe-for-web3/sdk";
 
@@ -12,8 +8,8 @@ import { PlanRecord } from "@stripe-for-web3/sdk";
 // UPDATE PLAN
 ////////////////////////////////////////////////////////////
 
-export async function resumePlan(
-    plan: PlanRecord,
+export async function getPlan(
+    planId: number,
 ) {
 
     ////////////////////////////////////////////////////////////
@@ -21,25 +17,36 @@ export async function resumePlan(
     ////////////////////////////////////////////////////////////
 
     if (
-        !plan.planId 
+        !Number.isInteger(planId) && planId >=0
     ) {
         throw new Error(
-            "Plan must have a planId.",
+            "PlanId should be a non-negative integer.",
         );
     }
 
     
-
-    const resumePlanResult = await stripe.merchant.resumePlan(
-        plan
-    );
-
     ////////////////////////////////////////////////////////////
     // RESULT
     ////////////////////////////////////////////////////////////
 
-    return {
-        resumedPlan:
-            resumePlanResult,  
-    };
+
+    try{
+        const getPlanResult = await stripe.merchant.getPlan(
+        planId
+        );
+
+        return {
+                plan:
+                    getPlanResult,  
+            };
+    } catch (err){
+        console.error(err);
+        return {
+            plan: {} as PlanRecord
+        }
+    }
+
+    
+
+    
 }

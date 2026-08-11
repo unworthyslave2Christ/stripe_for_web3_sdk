@@ -2,84 +2,189 @@
 
 import type { CustomerClient } from "./CustomerClient";
 
-import type { SubscriptionRecord, SubscriptionStatus } from "../types/Subscription";
+import type {
+    SubscriptionRecord,
+    SubscriptionStatus,
+    SubscriptionApiResponse,
+} from "../types/Subscription";
 
-interface SubscriptionApiResponse {
-  subscription_id: number;
-
-  merchant_id: number;
-
-  plan_id: number;
-
-  customer_id: string;
-
-  smart_account: `0x${string}`;
-
-  permission_id: number;
-
-  status: string;
-
-  next_billing_time: string;
-
-  last_charged_at: string | null;
-
-  cancelled_at: string | null;
-
-  created_at: string;
-}
+////////////////////////////////////////////////////////////
+// PARAMETERS
+////////////////////////////////////////////////////////////
 
 export interface GetSubscriptionsParams {
-  client: CustomerClient;
+    client: CustomerClient;
 
-  customerId: string;
+    customerId: number;
 }
 
+////////////////////////////////////////////////////////////
+// GET SUBSCRIPTIONS
+////////////////////////////////////////////////////////////
+
 export async function getSubscriptions({
-  client,
-
-  customerId,
+    client,
+    customerId,
 }: GetSubscriptionsParams): Promise<SubscriptionRecord[]> {
-  const response = await fetch(
-    `${client.apiUrl ?? ""}/customers/${customerId}/subscriptions`,
 
-    {
-      method: "GET",
+    ////////////////////////////////////////////////////////////
+    // VALIDATE CLIENT
+    ////////////////////////////////////////////////////////////
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+    if (!client.apiUrl) {
+        throw new Error(
+            "Customer API URL is not configured.",
+        );
+    }
 
-      cache: "no-store",
-    },
-  );
+    ////////////////////////////////////////////////////////////
+    // VALIDATE CUSTOMER ID
+    ////////////////////////////////////////////////////////////
 
-  if (!response.ok) {
-    throw new Error("Unable to retrieve subscriptions.");
-  }
+    if (
+        !Number.isInteger(customerId) ||
+        customerId > 0
+    ) {
+        throw new Error(
+            "Invalid customerId.",
+        );
+    }
 
-  const data = (await response.json()) as SubscriptionApiResponse[];
+    ////////////////////////////////////////////////////////////
+    // REQUEST
+    ////////////////////////////////////////////////////////////
 
-  return data.map((subscription) => ({
-    subscriptionId: subscription.subscription_id,
-    
-    merchantId: subscription.merchant_id,
+    const response = await fetch(
+        `${client.apiUrl}/api/v1/customers/${encodeURIComponent(customerId)}/subscriptions`,
+        {
+            method: "GET",
 
-    planId: subscription.plan_id,
+            headers: {
+                Accept:
+                    "application/json",
+            },
 
-    customerId: subscription.customer_id,
+            cache:
+                "no-store",
+        },
+    );
 
-    smartAccount: subscription.smart_account,
+    ////////////////////////////////////////////////////////////
+    // RESPONSE ERROR
+    ////////////////////////////////////////////////////////////
 
-    permissionId: subscription.permission_id.toString(),
+    if (!response.ok) {
 
-    status: subscription.status as SubscriptionStatus,
+        let message =
+            "Unable to retrieve subscriptions.";
 
-    nextBillingTime: Number(subscription.next_billing_time),
+        try {
 
-    lastChargedAt: Number(subscription.last_charged_at),
+            const errorBody =
+                await response.json() as {
+                    error?: string;
+                };
 
-    cancelledAt: Number(subscription.cancelled_at),
+            if (errorBody.error) {
+                message =
+                    errorBody.error;
+            }
 
-    createdAt: Number(subscription.created_at),
-  }));
+        } catch {
+            // Preserve default error message.
+        }
+
+        throw new Error(message);
+    }
+
+    ////////////////////////////////////////////////////////////
+    // RESPONSE BODY
+    ////////////////////////////////////////////////////////////
+
+    const data =
+        await response.json() as
+            | SubscriptionApiResponse[]
+            | {
+                subscriptions?: SubscriptionApiResponse[];
+            };
+
+    ////////////////////////////////////////////////////////////
+    // EXTRACT SUBSCRIPTIONS
+    ////////////////////////////////////////////////////////////
+
+    const subscriptions =
+        Array.isArray(data)
+            ? data
+            : data.subscriptions ?? [];
+
+    ////////////////////////////////////////////////////////////
+    // NORMALIZE
+    ////////////////////////////////////////////////////////////
+
+    return subscriptions.map(
+        (subscription) => {
+
+            return {
+                subscriptionId:
+                    Number(
+                        subscription.subscription.subscriptionId,
+                    ),
+
+                customerId:
+                    subscription.subscription.customerId.toString(),
+
+                merchantId:
+                    Number(
+                        subscription.subscription.merchantId,
+                    ),
+
+                planId:
+                    Number(
+                        subscription.subscription.planId,
+                    ),
+
+                smartAccount:
+                    subscription.subscription.smartAccount,
+
+                permissionId:
+                    subscription.subscription.permissionId.toString(),
+
+                status:
+                    subscription.subscription.status,
+
+                nextBillingTime:
+                    new Date(
+                        subscription.subscription.nextBillingTime,
+                    ),
+
+                lastChargedAt:
+                    subscription.subscription.lastChargedAt ===
+                        null ||
+                    subscription.subscription.lastChargedAt ===
+                        undefined
+                        ? null
+                        : Number(
+                            subscription.subscription.lastChargedAt,
+                        ),
+
+                cancelledAt:
+                    subscription.subscription.cancelledAt ===
+                        null ||
+                    subscription.subscription.cancelledAt ===
+                        undefined
+                        ? null
+                        : Number(
+                            subscription.subscription.cancelledAt,
+                        ),
+
+                createdAt:
+                    Number(
+                        subscription.subscription.createdAt,
+                    ),
+
+                transactionHash:
+                    subscription.subscription.transactionHash,
+            };
+        },
+    );
 }
