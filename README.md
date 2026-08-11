@@ -1,4 +1,6 @@
-﻿# Stripe for Web3 SDK
+# [Click To Read Article on Medium](https://medium.com/@righteousnessbyfaithinjesus/i-wanted-stripe-for-web3-so-i-started-building-it-42445e9ddabc)
+ 
+ # Stripe for Web3 SDK
 
 The Stripe for Web3 SDK enables developers to integrate decentralized recurring subscription billing into Web3 applications with a simple TypeScript API.
 
