@@ -34,25 +34,33 @@ export interface GetMerchantByIdParams {
 ////////////////////////////////////////////////////////////
 
 export interface GetMerchantByIdApiResponse {
-  merchant_id: number;
+  merchant_id?: number;
+  merchantId?: number;
 
-  smart_account: Address;
+  smart_account?: Address;
+  smartAccount?: Address;
 
-  owner_wallet: Address;
+  owner_wallet?: Address;
+  ownerWallet?: Address;
 
-  payout_wallet: Address;
+  payout_wallet?: Address;
+  payoutWallet?: Address;
 
-  name: string;
+  name?: string;
 
-  metadata_uri: string;
+  metadata_uri?: string;
+  metadataUri?: string;
 
-  billing_operator: Address;
+  billing_operator?: Address;
+  billingOperator?: Address;
 
   status: string;
 
-  created_at: string | number | Date;
+  created_at?: string | number | Date;
+  createdAt?: string | number | Date;
 
-  updated_at: string | number | Date;
+  updated_at?: string | number | Date;
+  updatedAt?: string | number | Date;
 }
 
 ////////////////////////////////////////////////////////////
@@ -218,38 +226,46 @@ function normalizeMerchant(
   return {
     merchantId:
       Number(
-        input.merchant_id,
+        input.merchant_id! ??
+        input.merchantId!
       ),
 
     smartAccount:
-      input.smart_account,
+      input.smart_account! ??
+      input.smartAccount!,
 
     ownerWallet:
-      input.owner_wallet,
+      input.owner_wallet! ??
+      input.ownerWallet!,
 
     payoutWallet:
-      input.payout_wallet,
+      input.payout_wallet! ??
+      input.payoutWallet!
+      ,
 
     name:
-      input.name,
+      input.name!,
 
     metadataURI:
       input.metadata_uri ?? "",
 
     billingOperator:
-      input.billing_operator,
+      input.billing_operator! ??
+      input.billingOperator!,
 
     status:
       input.status as MerchantStatus,
 
     createdAt:
       normalizeDate(
-        input.created_at,
+        input.created_at! ??
+        input.createdAt!
       ),
 
     updatedAt:
       normalizeDate(
-        input.updated_at,
+        input.updated_at ??
+        input.updatedAt!
       ),
   };
 }

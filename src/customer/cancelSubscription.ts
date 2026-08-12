@@ -4,6 +4,8 @@ import type { CustomerClient } from "./CustomerClient";
 
 import type { SubscriptionRecord } from "../types/Subscription";
 
+import { getSubscription } from "./getSubscription";
+
 import { getCustomerKernel } from "../kernels/getCustomerKernel";
 
 import { encodeBillingProtocolCall } from "../contracts/encode";
@@ -15,13 +17,19 @@ import { waitForReceipt } from "../internal/waitForReceipt";
 import { mirror } from "../internal/mirror";
 
 ////////////////////////////////////////////////////////////
-// PARAMETERS
+// INPUT
 ////////////////////////////////////////////////////////////
 
 export interface CancelSubscriptionParams {
-    client: CustomerClient;
+  /**
+   * Customer SDK client.
+   */
+  client: CustomerClient;
 
-    subscription: SubscriptionRecord;
+  /**
+   * Canonical subscription identifier.
+   */
+  subscriptionId: number;
 }
 
 ////////////////////////////////////////////////////////////
@@ -29,138 +37,188 @@ export interface CancelSubscriptionParams {
 ////////////////////////////////////////////////////////////
 
 export async function cancelSubscription({
-    client,
-    subscription,
+  client,
+  subscriptionId,
 }: CancelSubscriptionParams) {
+  ////////////////////////////////////////////////////////////
+  // CONFIGURATION
+  ////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////
-    // CUSTOMER KERNEL
-    ////////////////////////////////////////////////////////////
+  if (!client.contractAddress) {
+    throw new Error("Billing Protocol contract address is not configured.");
+  }
 
-    const {
-        customer,
+  if (!client.apiUrl) {
+    throw new Error("Customer API URL is not configured.");
+  }
 
-        kernel,
+  ////////////////////////////////////////////////////////////
+  // VALIDATE SUBSCRIPTION ID
+  ////////////////////////////////////////////////////////////
 
-        kernelClient,
+  if (!Number.isInteger(subscriptionId) || subscriptionId <= 0) {
+    throw new Error("Invalid subscription ID.");
+  }
 
-    } = await getCustomerKernel({
+  ////////////////////////////////////////////////////////////
+  // RESOLVE CANONICAL SUBSCRIPTION
+  ////////////////////////////////////////////////////////////
 
-        walletClient:
-            client.walletClient,
+  const subscription: SubscriptionRecord = await getSubscription({
+    client,
+    subscriptionId,
+  });
 
-        publicClient:
-            client.publicClient,
+  ////////////////////////////////////////////////////////////
+  // CURRENT STATE
+  ////////////////////////////////////////////////////////////
 
-        apiUrl:
-            client.apiUrl,
+  if (subscription.status === "CANCELLED") {
+    throw new Error(
+      `Subscription ${subscription.subscriptionId} is already cancelled.`,
+    );
+  }
 
-    });
+  ////////////////////////////////////////////////////////////
+  // CUSTOMER KERNEL
+  ////////////////////////////////////////////////////////////
 
+  const { customer, kernelAccount, kernelClient } = await getCustomerKernel({
+    walletClient: client.walletClient,
 
-    ////////////////////////////////////////////////////////////
-    // ENCODE BILLING PROTOCOL CALL
-    ////////////////////////////////////////////////////////////
+    publicClient: client.publicClient,
 
-    const data =
-        encodeBillingProtocolCall(
-            "cancelSubscription",
+    apiUrl: client.apiUrl,
+  });
 
-            [
-                BigInt(
-                    subscription.subscriptionId,
-                ),
-            ],
-        );
+  ////////////////////////////////////////////////////////////
+  // VERIFY CUSTOMER
+  ////////////////////////////////////////////////////////////
 
+  console.log(
+    "customer.customerId.toString(): ",
+    customer.customerId.toString(),
+  );
 
-    ////////////////////////////////////////////////////////////
-    // EXECUTE USER OPERATION
-    ////////////////////////////////////////////////////////////
+  console.log(
+    "subscription.customerId.toString(): ",
+    subscription.customerId.toString(),
+  );
 
-    const userOpHash =
-        await executeUserOperation({
+  if (customer.customerId.toString() !== subscription.customerId.toString()) {
+    throw new Error("Subscription does not belong to the current customer.");
+  }
 
-            kernel,
+  ////////////////////////////////////////////////////////////
+  // VERIFY CUSTOMER KERNEL
+  ////////////////////////////////////////////////////////////
 
-            kernelClient,
+  if (
+    kernelAccount.address.toLowerCase() !== customer.smartAccount.toLowerCase()
+  ) {
+    throw new Error("Customer Kernel verification failed.");
+  }
 
-            contractAddress:
-                client.contractAddress,
+  ////////////////////////////////////////////////////////////
+  // VERIFY SUBSCRIPTION SMART ACCOUNT
+  ////////////////////////////////////////////////////////////
 
-            data,
+  if (
+    kernelAccount.address.toLowerCase() !==
+    subscription.smartAccount.toLowerCase()
+  ) {
+    throw new Error(
+      "Subscription smart account does not match the customer Kernel.",
+    );
+  }
 
-        });
+  ////////////////////////////////////////////////////////////
+  // ENCODE BILLING PROTOCOL CALL
+  ////////////////////////////////////////////////////////////
 
+  const data = encodeBillingProtocolCall("cancelSubscription", [
+    BigInt(subscription.subscriptionId),
+  ]);
 
-    ////////////////////////////////////////////////////////////
-    // WAIT FOR USER OPERATION RECEIPT
-    ////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // EXECUTE USER OPERATION
+  ////////////////////////////////////////////////////////////
 
-    const receipt =
-        await waitForReceipt({
+  const userOperationHash = await executeUserOperation({
+    kernel: kernelAccount,
 
-            kernelClient,
+    kernelAccount,
 
-            userOperationHash:
-                userOpHash,
+    kernelClient,
 
-        });
+    contractAddress: client.contractAddress,
 
+    data,
+  });
 
-    ////////////////////////////////////////////////////////////
-    // MIRROR BACKEND STATE
-    ////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // WAIT FOR RECEIPT
+  ////////////////////////////////////////////////////////////
 
-    await mirror({
+  const receipt = await waitForReceipt({
+    kernelClient,
 
-        apiUrl:
-            client.apiUrl,
+    userOperationHash,
+  });
 
-        endpoint:
-            `/api/v1/subscriptions/${subscription.subscriptionId}/cancel`,
+  ////////////////////////////////////////////////////////////
+  // VERIFY RECEIPT
+  ////////////////////////////////////////////////////////////
 
-        body: {
+  if (receipt?.status && receipt.status !== "success") {
+    throw new Error("Cancel subscription transaction failed.");
+  }
 
-            subscriptionId:
-                subscription.subscriptionId,
+  ////////////////////////////////////////////////////////////
+  // MIRROR BACKEND STATE
+  ////////////////////////////////////////////////////////////
 
-            status:
-                "CANCELLED",
+  const mirrored = await mirror({
+    apiUrl: client.apiUrl,
 
-        },
+    endpoint: `/api/v1/subscriptions/${subscription.subscriptionId}/cancel`,
 
-    });
+    body: {
+      subscriptionId: subscription.subscriptionId,
 
+      customerId: customer.customerId,
 
-    ////////////////////////////////////////////////////////////
-    // RETURN
-    ////////////////////////////////////////////////////////////
+      status: "CANCELLED",
+    },
+  });
 
-    return {
+  ////////////////////////////////////////////////////////////
+  // UPDATED SUBSCRIPTION
+  ////////////////////////////////////////////////////////////
 
-        customer,
+  const updatedSubscription: SubscriptionRecord = {
+    ...subscription,
 
-        subscription: {
+    status: "CANCELLED",
 
-            ...subscription,
+    cancelledAt: new Date(),
+  };
 
-            status:
-                "CANCELLED",
+  ////////////////////////////////////////////////////////////
+  // RETURN
+  ////////////////////////////////////////////////////////////
 
-            cancelledAt:
-                Math.floor(
-                    Date.now() / 1000,
-                ),
+  return {
+    customer,
 
-        },
+    subscription: updatedSubscription,
 
-        kernel,
+    kernelAccount,
 
-        userOpHash,
+    userOperationHash,
 
-        receipt,
+    receipt,
 
-    };
-
+    mirrored,
+  };
 }

@@ -253,7 +253,7 @@ export interface CustomerKernelResult {
   /**
    * Reconstructed Kernel account.
    */
-  kernel: any;
+  kernelAccount: any;
 
   /**
    * Kernel Account Client used to submit
@@ -568,7 +568,7 @@ export async function getCustomerKernel({
   return {
     customer,
 
-    kernel,
+    kernelAccount: kernel,
 
     kernelClient,
 

@@ -176,27 +176,27 @@ export class CustomerClient {
     });
   }
 
-  pauseSubscription(subscription: SubscriptionRecord) {
+  pauseSubscription(subscriptionId: number) {
     return pauseSubscription({
       client: this,
 
-      subscription,
+      subscriptionId
     });
   }
 
-  resumeSubscription(subscription: SubscriptionRecord) {
+  resumeSubscription(subscriptionId: number) {
     return resumeSubscription({
       client: this,
 
-      subscription,
+      subscriptionId,
     });
   }
 
-  cancelSubscription(subscription: SubscriptionRecord) {
+  cancelSubscription(subscriptionId: number) {
     return cancelSubscription({
       client: this,
 
-      subscription,
+      subscriptionId,
     });
   }
 
@@ -212,7 +212,7 @@ export class CustomerClient {
     });
   }
 
-  getSubscriptions(customerId: number) {
+  getSubscriptions(customerId: string) {
     return getSubscriptions({
       client: this,
 
