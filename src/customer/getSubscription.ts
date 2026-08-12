@@ -8,13 +8,22 @@ import type {
     SubscriptionApiResponse,
 } from "../types/Subscription";
 
+
+
 ////////////////////////////////////////////////////////////
-// PARAMETERS
+// INPUT
 ////////////////////////////////////////////////////////////
 
 export interface GetSubscriptionParams {
+
+    /**
+     * Customer SDK client.
+     */
     client: CustomerClient;
 
+    /**
+     * Canonical subscription identifier.
+     */
     subscriptionId: number;
 }
 
@@ -24,7 +33,6 @@ export interface GetSubscriptionParams {
 
 export async function getSubscription({
     client,
-
     subscriptionId,
 }: GetSubscriptionParams): Promise<SubscriptionRecord> {
 
@@ -33,9 +41,11 @@ export async function getSubscription({
     ////////////////////////////////////////////////////////////
 
     if (!client.apiUrl) {
+
         throw new Error(
             "Customer API URL is not configured.",
         );
+
     }
 
     ////////////////////////////////////////////////////////////
@@ -46,29 +56,32 @@ export async function getSubscription({
         !Number.isInteger(subscriptionId) ||
         subscriptionId <= 0
     ) {
+
         throw new Error(
             "Invalid subscriptionId.",
         );
+
     }
 
     ////////////////////////////////////////////////////////////
     // REQUEST
     ////////////////////////////////////////////////////////////
 
-    const response = await fetch(
-        `${client.apiUrl}/api/v1/subscriptions/${subscriptionId}`,
-        {
-            method: "GET",
+    const response =
+        await fetch(
+            `${client.apiUrl}/api/v1/subscriptions/${subscriptionId}`,
+            {
+                method: "GET",
 
-            headers: {
-                Accept:
-                    "application/json",
+                headers: {
+                    Accept:
+                        "application/json",
+                },
+
+                cache:
+                    "no-store",
             },
-
-            cache:
-                "no-store",
-        },
-    );
+        );
 
     ////////////////////////////////////////////////////////////
     // RESPONSE ERROR
@@ -103,67 +116,139 @@ export async function getSubscription({
     ////////////////////////////////////////////////////////////
 
     const data =
-        await response.json() as SubscriptionApiResponse;
+    await response.json() as SubscriptionApiResponse;
 
     ////////////////////////////////////////////////////////////
     // SUBSCRIPTION PRESENCE
     ////////////////////////////////////////////////////////////
 
-    if (!data) {
+    if (
+        !data?.subscription
+    ) {
+
         throw new Error(
             `Subscription ${subscriptionId} was not returned by the API.`,
         );
+
     }
 
+    const subscription =
+        data.subscription;
+
     ////////////////////////////////////////////////////////////
-    // NORMALIZE API RECORD
+    // NORMALIZE
     ////////////////////////////////////////////////////////////
 
     return {
+
         subscriptionId:
-            Number(data.subscription.subscriptionId),
+            Number(
+                subscription.subscriptionId,
+            ),
 
         customerId:
-            data.subscription.customerId.toString(),
+            subscription.customerId.toString(),
 
         merchantId:
-            Number(data.subscription.merchantId),
+            Number(
+                subscription.merchantId,
+            ),
 
         planId:
-            Number(data.subscription.planId),
+            Number(
+                subscription.planId,
+            ),
 
         smartAccount:
-            data.subscription.smartAccount,
+            subscription.smartAccount,
 
         permissionId:
-            data.subscription.permissionId.toString(),
+            subscription.permissionId.toString(),
 
         status:
-            data.subscription.status as SubscriptionStatus,
+            subscription.status as SubscriptionStatus,
 
         nextBillingTime:
-            new Date(data.subscription.nextBillingTime),
+            normalizeDate(
+                subscription.nextBillingTime,
+            ),
 
         lastChargedAt:
-            data.subscription.lastChargedAt === null ||
-            data.subscription.lastChargedAt=== undefined
-                ? null
-                : Number(
-                    data.subscription.lastChargedAt,
-                ),
+            normalizeNullableDate(
+                subscription.lastChargedAt,
+            ),
 
         cancelledAt:
-            data.subscription.cancelledAt === null ||
-            data.subscription.cancelledAt === undefined
-                ? null
-                : Number(
-                    data.subscription.cancelledAt,
-                ),
+            normalizeNullableDate(
+                subscription.cancelledAt,
+            ),
 
         createdAt:
-            Number(data.subscription.createdAt),
+            normalizeDate(
+                subscription.createdAt,
+            ),
 
         transactionHash:
-            data.subscription.transactionHash,
+            subscription.transactionHash,
     };
+}
+
+////////////////////////////////////////////////////////////
+// DATE NORMALIZATION
+////////////////////////////////////////////////////////////
+
+function normalizeDate(
+    value: unknown,
+): Date {
+
+    if (
+        value instanceof Date
+    ) {
+        return value;
+    }
+
+    if (
+        typeof value === "string" ||
+        typeof value === "number"
+    ) {
+
+        const date =
+            new Date(value);
+
+        if (
+            Number.isNaN(
+                date.getTime(),
+            )
+        ) {
+
+            throw new Error(
+                `Invalid subscription timestamp: ${value}`,
+            );
+
+        }
+
+        return date;
+    }
+
+    throw new Error(
+        "Subscription timestamp is missing or invalid.",
+    );
+}
+
+////////////////////////////////////////////////////////////
+// NULLABLE DATE NORMALIZATION
+////////////////////////////////////////////////////////////
+
+function normalizeNullableDate(
+    value: unknown,
+): Date | null {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return null;
+    }
+
+    return normalizeDate(value);
 }

@@ -7,6 +7,8 @@ export interface ExecuteUserOperationParams {
 
   kernelClient: any;
 
+  kernelAccount?: any;
+
   contractAddress: Address;
 
   data: `0x${string}`;
@@ -17,21 +19,43 @@ export async function executeUserOperation({
 
   kernelClient,
 
+  kernelAccount,
+
   contractAddress,
 
   data,
 }: ExecuteUserOperationParams) {
-  const callData = await encodeKernelCall(
-    kernel,
 
-    [
-      {
-        to: contractAddress,
+  let callData: any;
 
-        data,
-      },
-    ],
-  );
+  if (kernelAccount){
+    callData = await encodeKernelCall(
+      kernel,
+
+      [
+        {
+          to: contractAddress,
+
+          data,
+        },
+      ],
+
+      kernelAccount
+    );
+  } else {
+    callData = await encodeKernelCall(
+      kernel,
+
+      [
+        {
+          to: contractAddress,
+
+          data,
+        },
+      ],
+    );
+  }
+  
 
   const hash = await kernelClient.sendUserOperation({
     callData,

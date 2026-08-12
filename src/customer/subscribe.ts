@@ -26,8 +26,6 @@ import { getMerchantById } from "./getMerchantById";
 
 
 
-
-
 ////////////////////////////////////////////////////////////
 // INPUT
 ////////////////////////////////////////////////////////////
@@ -193,7 +191,7 @@ export async function subscribe({
    */
   const {
     customer,
-    kernel,
+    kernelAccount,
     kernelClient,
     permission,
     permissionId,
@@ -235,7 +233,7 @@ export async function subscribe({
   ////////////////////////////////////////////////////////////
 
   if (
-    kernel.address.toLowerCase() !==
+    kernelAccount.address.toLowerCase() !==
     customer.smartAccount.toLowerCase()
   ) {
     throw new Error(
@@ -286,6 +284,10 @@ export async function subscribe({
         customer.smartAccount,
       ],
     });
+
+  console.log("BigInt(balance as bigint): ", BigInt(balance as bigint));
+  console.log("BigInt(plan.amount): ", BigInt(plan.amount));
+  console.log("plan.paymentToken : ", plan.paymentToken );
 
   if (
     BigInt(balance as bigint) <
@@ -370,7 +372,7 @@ export async function subscribe({
   await approveTokenIfNeeded({
     client,
 
-    kernel,
+    kernel: kernelAccount,
 
     kernelClient,
 
@@ -420,7 +422,9 @@ export async function subscribe({
 
   const userOperationHash =
     await executeUserOperation({
-      kernel,
+      kernel: kernelAccount,
+
+      kernelAccount,
 
       kernelClient,
 
@@ -744,6 +748,7 @@ function normalizeOnChainSubscription(
 function normalizeSubscription(
   input: any,
 ): SubscriptionRecord {
+  console.log("shape of input received: ", input);
   return {
     subscriptionId:
       Number(
@@ -799,13 +804,13 @@ function normalizeSubscription(
         : undefined,
 
     createdAt:
-      normalizeDate(
+      normalizeNullableDate(
         input.createdAt ??
           input.created_at,
       ),
 
     updatedAt:
-      normalizeDate(
+      normalizeNullableDate(
         input.updatedAt ??
           input.updated_at,
       ),
@@ -858,6 +863,24 @@ function normalizeDate(
   throw new Error(
     "Subscription timestamp is missing or invalid.",
   );
+}
+
+////////////////////////////////////////////////////////////
+// NULLABLE DATE NORMALIZATION
+////////////////////////////////////////////////////////////
+
+function normalizeNullableDate(
+    value: unknown,
+): Date | null {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return null;
+    }
+
+    return normalizeDate(value);
 }
 
 ////////////////////////////////////////////////////////////

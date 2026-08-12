@@ -11,6 +11,13 @@ import {
 import type {
     Address,
 } from "viem";
+import { subscribeToPlan } from "./subscribeToPlan.js";
+import { pausingSubscription } from "./pausingSubscription.js";
+import { resumingSubscription } from "./resumingSubscription.js";
+import { cancellingSubscription } from "./cancellingSubscription.js";
+import { gettingSubscriptionsPerCustomer } from "./gettingSubscriptionsPerCustomer.js";
+
+
 
 ////////////////////////////////////////////////////////////
 // CENTRAL CUSTOMER
@@ -115,12 +122,46 @@ export async function centralCustomer() {
         "Customer Status:",
         returnedCustomer.status,
     );
+    
+    const PLAN_ID = 63;
+
+    // Subscribing
+    const result = await subscribeToPlan(PLAN_ID);
+
+    // Pausing subscription
+    const {pausedSubscription }= await pausingSubscription(
+        result.subscription.subscriptionId
+    )
+
+    console.log("pausedSubscription: ", pausedSubscription);
+
+    // Resuming paused subscription
+    const {resumedSubscription} = await resumingSubscription(
+        result.subscription.subscriptionId
+    );
+
+    console.log("resumedSubscription: ", resumedSubscription);
+
+    const {cancelledSubscription} = await cancellingSubscription(
+        result.subscription.subscriptionId
+    );
+
+    console.log("cancelledSubscription: ", cancelledSubscription);
+
+    const {allCustomerSubscriptions} = await gettingSubscriptionsPerCustomer(
+        cancelledSubscription.customerId
+    );
+
+    console.log("allCustomerSubscriptions length: ", allCustomerSubscriptions.length);
+
+
+    // Subscribing to same Plan, having cancelled the plan
+    subscribeToPlan(PLAN_ID);
 
     return {
 
         customer:
             returnedCustomer,
-
     };
 
 }
