@@ -1,7 +1,7 @@
 {
-  "name": "@stripe-for-web3/sdk",
-  "version": "0.2.37",
-  "description": "Official TypeScript SDK for integrating 'Stripe for Web3' decentralized recurring subscription billing into any application.",
+  "name": "@stripe-for-web3/wallet",
+  "version": "0.2.41",
+  "description": "Wallet utilities for interacting with balances, token approvals, and wallet state in Stripe for Web3 applications.",
   "license": "MIT",
   "author": "Stripe for Web3",
   "directories": {
@@ -53,15 +53,9 @@
   },
   "homepage": "https://github.com/unworthyslave2Christ/stripe_for_web3_sdk#readme",
   "peerDependencies": {
-    "@zerodev/ecdsa-validator": "^5.4.9",
-    "@zerodev/sdk": "^5.5.10",
-    "permissionless": "^0.1.49",
     "viem": "^2.55.11"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
-    "@zerodev/permissions": "5.6.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^24.3.0",
     "eslint": "^9.34.0",
