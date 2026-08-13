@@ -23,6 +23,12 @@ import { getSubscriptions } from "./getSubscriptions";
 
 import { getCustomerByWallet } from "./getCustomerByWallet";
 
+import {
+    getPlan,
+} from "./getPlan";
+
+
+
 ////////////////////////////////////////////////////////////
 // API RESPONSE
 ////////////////////////////////////////////////////////////
@@ -129,6 +135,14 @@ export class CustomerClient {
           ownerWallet,
       });
   }
+
+
+  async getPlan(planId: number) {
+      return getPlan({
+          client: this,
+          planId,
+      });
+  }
     
   
   async getById(customerId: number): Promise<CustomerRecord> {
@@ -168,11 +182,11 @@ export class CustomerClient {
   // SUBSCRIPTIONS
   ////////////////////////////////////////////////////////////
 
-  subscribe(params: Omit<SubscribeParams, "client">) {
+  subscribe(planId: number) {
     return subscribe({
       client: this,
 
-      ...params,
+      planId
     });
   }
 

@@ -24,6 +24,11 @@ import { mirror } from "@stripe-for-web3/core";
 
 import { getMerchantById } from "./getMerchantById";
 
+import {
+    getPlan,
+} from "./getPlan";
+
+
 
 
 ////////////////////////////////////////////////////////////
@@ -104,10 +109,10 @@ export interface SubscribeResult {
  */
 export async function subscribe({
   client,
-  plan,
+  planId,
 }: {
   client: CustomerClient;
-  plan: PlanRecord;
+  planId: number;
 }): Promise<SubscribeResult> {
   ////////////////////////////////////////////////////////////
   // CONFIGURATION
@@ -127,9 +132,16 @@ export async function subscribe({
 
   const contractAddress = client.contractAddress;
 
+
+
   ////////////////////////////////////////////////////////////
   // VALIDATION
   ////////////////////////////////////////////////////////////
+
+  const plan: PlanRecord = await getPlan({
+    client,
+    planId
+  });
 
   if (
     !Number.isInteger(plan.planId) ||

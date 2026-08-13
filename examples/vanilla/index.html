@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>
+        Stripe for Web3 — SaaS Demo
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./styles.css"
+    />
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="brand-mark">
+            S
+        </div>
+
+        <div>
+            <strong>
+                Stripe for Web3
+            </strong>
+
+            <span>
+                SaaS Demo
+            </span>
+        </div>
+    </div>
+
+    <button
+        id="connect-wallet"
+        class="button primary"
+    >
+        Connect Wallet
+    </button>
+
+</header>
+
+
+<main class="container">
+
+    <section
+        id="notification-area"
+        class="notification-area"
+    ></section>
+
+
+    <section
+        id="hero"
+        class="hero"
+    >
+
+        <div>
+
+            <span class="eyebrow">
+                WEB3 SUBSCRIPTION BILLING
+            </span>
+
+            <h1>
+                Unlock software with
+                your subscription.
+            </h1>
+
+            <p>
+                A realistic SaaS checkout powered by
+                Smart Accounts, Account Abstraction,
+                and Stripe for Web3.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section
+        id="customer-panel"
+        class="panel hidden"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    CUSTOMER
+                </span>
+
+                <h2>
+                    Your account
+                </h2>
+
+            </div>
+
+            <span
+                id="customer-status"
+                class="status"
+            >
+                Not connected
+            </span>
+
+        </div>
+
+        <div
+            id="customer-details"
+            class="customer-details"
+        ></div>
+
+    </section>
+
+
+    <section
+        id="plans-section"
+        class="panel"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    PLANS
+                </span>
+
+                <h2>
+                    Choose your workspace
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div
+            id="plans"
+            class="plans"
+        >
+
+            <div class="empty-state">
+                Connect your wallet to view plans.
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section
+        id="subscriptions-section"
+        class="panel hidden"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    SUBSCRIPTIONS
+                </span>
+
+                <h2>
+                    Your subscriptions
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div
+            id="subscriptions"
+            class="subscriptions"
+        ></div>
+
+    </section>
+
+
+    <section
+        id="features-section"
+        class="panel hidden"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    APPLICATION
+                </span>
+
+                <h2>
+                    Your unlocked features
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div
+            id="features"
+            class="features"
+        ></div>
+
+    </section>
+
+</main>
+
+
+<script
+    type="module"
+    src="/src/main.js"
+></script>
+
+</body>
+</html>
