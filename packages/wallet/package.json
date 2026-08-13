@@ -1,0 +1,69 @@
+{
+  "name": "@stripe-for-web3/wallet",
+  "version": "0.2.41",
+  "description": "Wallet utilities for interacting with balances, token approvals, and wallet state in Stripe for Web3 applications.",
+  "license": "MIT",
+  "author": "Stripe for Web3",
+  "directories": {
+    "example": "examples"
+  },
+  "keywords": [
+    "stripe",
+    "web3",
+    "subscriptions",
+    "billing",
+    "payments",
+    "erc4337",
+    "account-abstraction",
+    "zerodev",
+    "ethereum",
+    "arbitrum",
+    "sdk",
+    "typescript"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs",
+    "dev": "tsup --watch --config tsup.config.ts",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/stripe-for-web3-sdk."
+  },
+  "bugs": {
+    "url": "https://github.com/unworthyslave2Christ/stripe_for_web3_sdk/issues"
+  },
+  "homepage": "https://github.com/unworthyslave2Christ/stripe_for_web3_sdk#readme",
+  "peerDependencies": {
+    "viem": "^2.55.11"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "eslint": "^9.34.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

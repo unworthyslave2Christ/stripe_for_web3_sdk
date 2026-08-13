@@ -1,7 +1,8 @@
 {
-  "name": "@stripe-for-web3/sdk",
-  "version": "0.2.36",
-  "description": "Official TypeScript SDK for integrating 'Stripe for Web3' decentralized recurring subscription billing into any application.",
+  "name": "stripe-for-web3-sdk",
+  "private": true,
+  "version": "0.2.41",
+  "description": "Official TypeScript SDK(An hierarchical monorepo of SDKs) for integrating 'Stripe for Web3' decentralized recurring subscription billing into any application.",
   "license": "MIT",
   "author": "Stripe for Web3",
   "directories": {

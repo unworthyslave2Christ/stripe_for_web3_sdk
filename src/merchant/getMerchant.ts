@@ -266,7 +266,6 @@ export async function getMerchantByOwnerWallet(
   apiUrl: string,
 ): Promise<MerchantRecord | null> {
     
-
   const response = await fetch(
     `${apiUrl}/api/v1/merchants/owner/${ownerWallet}`,
     {

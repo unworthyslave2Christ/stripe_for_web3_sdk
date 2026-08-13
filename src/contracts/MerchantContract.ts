@@ -1,133 +1,133 @@
-// src/contracts/MerchantContract.ts
+// // src/contracts/MerchantContract.ts
 
-import type {
-    Address,
-    PublicClient,
-} from "viem";
+// import type {
+//     Address,
+//     PublicClient,
+// } from "viem";
 
-import protocolAbi from "./abi/Web3BillingProtocol.json";
+// import protocolAbi from "./abi/Web3BillingProtocol.json";
 
-////////////////////////////////////////////////////////////
-// CONFIGURATION
-////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////
+// // CONFIGURATION
+// ////////////////////////////////////////////////////////////
 
-export interface MerchantContractConfig {
-    publicClient: PublicClient;
+// export interface MerchantContractConfig {
+//     publicClient: PublicClient;
 
-    contractAddress: Address;
-}
+//     contractAddress: Address;
+// }
 
-////////////////////////////////////////////////////////////
-// READ PARAMS
-////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////
+// // READ PARAMS
+// ////////////////////////////////////////////////////////////
 
-export interface MerchantExistsParams {
-    publicClient: PublicClient;
+// export interface MerchantExistsParams {
+//     publicClient: PublicClient;
 
-    contractAddress: Address;
+//     contractAddress: Address;
 
-    smartAccount: Address;
-}
+//     smartAccount: Address;
+// }
 
-export interface MerchantIdLookupParams {
-    publicClient: PublicClient;
+// export interface MerchantIdLookupParams {
+//     publicClient: PublicClient;
 
-    contractAddress: Address;
+//     contractAddress: Address;
 
-    smartAccount: Address;
-}
+//     smartAccount: Address;
+// }
 
-export interface GetMerchantParams {
-    publicClient: PublicClient;
+// export interface GetMerchantParams {
+//     publicClient: PublicClient;
 
-    contractAddress: Address;
+//     contractAddress: Address;
 
-    merchantId: bigint;
-}
+//     merchantId: bigint;
+// }
 
-////////////////////////////////////////////////////////////
-// MERCHANT EXISTS
-////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////
+// // MERCHANT EXISTS
+// ////////////////////////////////////////////////////////////
 
-export async function merchantExists({
-    publicClient,
-    contractAddress,
-    smartAccount,
-}: MerchantExistsParams): Promise<boolean> {
+// export async function merchantExists({
+//     publicClient,
+//     contractAddress,
+//     smartAccount,
+// }: MerchantExistsParams): Promise<boolean> {
 
-    const result =
-        await publicClient.readContract({
-            address:
-                contractAddress,
+//     const result =
+//         await publicClient.readContract({
+//             address:
+//                 contractAddress,
 
-            abi:
-                protocolAbi,
+//             abi:
+//                 protocolAbi,
 
-            functionName:
-                "merchantExists",
+//             functionName:
+//                 "merchantExists",
 
-            args: [
-                smartAccount,
-            ],
-        });
+//             args: [
+//                 smartAccount,
+//             ],
+//         });
 
-    return result as boolean;
-}
+//     return result as boolean;
+// }
 
-////////////////////////////////////////////////////////////
-// MERCHANT ID BY SMART ACCOUNT
-////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////
+// // MERCHANT ID BY SMART ACCOUNT
+// ////////////////////////////////////////////////////////////
 
-export async function getMerchantIdBySmartAccount({
-    publicClient,
-    contractAddress,
-    smartAccount,
-}: MerchantIdLookupParams): Promise<bigint> {
+// export async function getMerchantIdBySmartAccount({
+//     publicClient,
+//     contractAddress,
+//     smartAccount,
+// }: MerchantIdLookupParams): Promise<bigint> {
 
-    const result =
-        await publicClient.readContract({
-            address:
-                contractAddress,
+//     const result =
+//         await publicClient.readContract({
+//             address:
+//                 contractAddress,
 
-            abi:
-                protocolAbi,
+//             abi:
+//                 protocolAbi,
 
-            functionName:
-                "merchantBySmartAccount",
+//             functionName:
+//                 "merchantBySmartAccount",
 
-            args: [
-                smartAccount,
-            ],
-        });
+//             args: [
+//                 smartAccount,
+//             ],
+//         });
 
-    return result as bigint;
-}
+//     return result as bigint;
+// }
 
-////////////////////////////////////////////////////////////
-// GET MERCHANT
-////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////
+// // GET MERCHANT
+// ////////////////////////////////////////////////////////////
 
-export async function getMerchant({
-    publicClient,
-    contractAddress,
-    merchantId,
-}: GetMerchantParams) {
+// export async function getMerchant({
+//     publicClient,
+//     contractAddress,
+//     merchantId,
+// }: GetMerchantParams) {
 
-    const result =
-        await publicClient.readContract({
-            address:
-                contractAddress,
+//     const result =
+//         await publicClient.readContract({
+//             address:
+//                 contractAddress,
 
-            abi:
-                protocolAbi,
+//             abi:
+//                 protocolAbi,
 
-            functionName:
-                "getMerchant",
+//             functionName:
+//                 "getMerchant",
 
-            args: [
-                merchantId,
-            ],
-        });
+//             args: [
+//                 merchantId,
+//             ],
+//         });
 
-    return result;
-}
+//     return result;
+// }
