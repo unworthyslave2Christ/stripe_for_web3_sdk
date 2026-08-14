@@ -300,41 +300,39 @@ export interface CustomerKernelResult {
  * customer's persisted Kernel information.
  */
 
-
 ////////////////////////////////////////////////////////////
 // GET CUSTOMER KERNEL
 ////////////////////////////////////////////////////////////
 
 export interface GetCustomerKernelResponse {
-    customer: {
-        customer_id: number;
+  customer: {
+    customer_id: number;
 
-        owner_wallet: `0x${string}`;
+    owner_wallet: `0x${string}`;
 
-        smart_account: `0x${string}`;
+    smart_account: `0x${string}`;
 
-        display_name: string;
+    display_name: string;
 
-        email: string;
+    email: string;
 
-        status: string;
+    status: string;
 
-        created_at: string;
+    created_at: string;
 
-        updated_at: string;
-    };
+    updated_at: string;
+  };
 
-    kernelAddress: `0x${string}`;
+  kernelAddress: `0x${string}`;
 
-    serializedPermissionAccount: string;
+  serializedPermissionAccount: string;
 
-    sessionPrivateKey: `0x${string}`;
+  sessionPrivateKey: `0x${string}`;
 
-    permissionId?: `0x${string}`;
+  permissionId?: `0x${string}`;
 
-    permission?: unknown;
+  permission?: unknown;
 }
-
 
 export async function getCustomerKernel({
   walletClient,
@@ -363,87 +361,57 @@ export async function getCustomerKernel({
   // REQUEST CUSTOMER KERNEL
   ////////////////////////////////////////////////////////////
 
-  const response =
-        await fetch(
-            `${apiUrl}/api/v1/customers/kernel`,
-            {
-                method: "POST",
+  const response = await fetch(`${apiUrl}/api/v1/customers/kernel`, {
+    method: "POST",
 
-                headers: {
-                    "Content-Type":
-                        "application/json",
+    headers: {
+      "Content-Type": "application/json",
 
-                    Accept:
-                        "application/json",
-                },
+      Accept: "application/json",
+    },
 
-                body:
-                    JSON.stringify({
-                        wallet:
-                            ownerWallet,
-                    }),
+    body: JSON.stringify({
+      wallet: ownerWallet,
+    }),
 
-                cache:
-                    "no-store",
-            },
-        );
+    cache: "no-store",
+  });
 
   ////////////////////////////////////////////////////////////
   // RESPONSE ERROR
   ////////////////////////////////////////////////////////////
 
-
   if (!response.ok) {
+    // let message = "Unable to load customer smart account.";
+    let message = "Customer should first register a smart account.";
 
-        let message =
-            "Unable to load customer Kernel.";
+    try {
+      const errorBody: unknown = await response.json();
 
-        try {
+      if (typeof errorBody === "object" && errorBody !== null) {
+        const body = errorBody as {
+          error?: unknown;
+          message?: unknown;
+        };
 
-            const errorBody: unknown =
-                await response.json();
-
-            if (
-                typeof errorBody === "object" &&
-                errorBody !== null
-            ) {
-
-                const body =
-                    errorBody as {
-                        error?: unknown;
-                        message?: unknown;
-                    };
-
-                if (
-                    typeof body.error === "string"
-                ) {
-
-                    message =
-                        body.error;
-
-                } else if (
-                    typeof body.message === "string"
-                ) {
-
-                    message =
-                        body.message;
-
-                }
-
-            }
-
-        } catch {
-            // Preserve default error message.
+        if (typeof body.error === "string") {
+          message = body.error;
+        } else if (typeof body.message === "string") {
+          message = body.message;
         }
-
-        throw new Error(message);
+      }
+    } catch {
+      // Preserve default error message.
     }
+
+    throw new Error(message);
+  }
 
   ////////////////////////////////////////////////////////////
   // RESPONSE
   ////////////////////////////////////////////////////////////
 
-  const body = await response.json() as GetCustomerKernelResponse;
+  const body = (await response.json()) as GetCustomerKernelResponse;
 
   ////////////////////////////////////////////////////////////
   // CUSTOMER
@@ -472,8 +440,7 @@ export async function getCustomerKernel({
   // SERIALIZED PERMISSION ACCOUNT
   ////////////////////////////////////////////////////////////
 
-  const serializedPermissionAccount =
-    body.serializedPermissionAccount;
+  const serializedPermissionAccount = body.serializedPermissionAccount;
 
   if (!serializedPermissionAccount) {
     throw new Error("Serialized customer permission account was not returned.");

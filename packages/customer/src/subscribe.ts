@@ -223,6 +223,12 @@ export async function subscribe({
   ////////////////////////////////////////////////////////////
 
   if (!customer) {
+      throw new Error(
+          "CUSTOMER_NOT_FOUND",
+      );
+  }
+
+  if (!customer) {
     throw new Error(
       "Customer was not returned by the backend.",
     );

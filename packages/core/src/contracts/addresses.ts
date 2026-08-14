@@ -1,10 +1,33 @@
+// packages/core/src/contracts/addresses.ts
+
 import type { Address } from "viem";
 
-export interface StripeForWeb3Addresses {
+////////////////////////////////////////////////////////////
+// BILLING PROTOCOL ADDRESSES
+////////////////////////////////////////////////////////////
+
+export interface BillingProtocolAddresses {
     billingProtocol: Address;
 }
 
-export const defaultAddresses: StripeForWeb3Addresses = {
+////////////////////////////////////////////////////////////
+// DEFAULT ADDRESSES
+////////////////////////////////////////////////////////////
+
+export const DEFAULT_ADDRESSES: BillingProtocolAddresses = {
     billingProtocol:
-        process.env.BILLING_PROTOCOL_ADDRESS as Address,
+        "0x942da4e4f27F231EB32bA0Dc728f53F04F70b1C9" as Address,
 };
+
+////////////////////////////////////////////////////////////
+// ADDRESS RESOLVER
+////////////////////////////////////////////////////////////
+
+export function getBillingProtocolAddress(
+    addresses?: Partial<BillingProtocolAddresses>,
+): Address {
+    return (
+        addresses?.billingProtocol ??
+        DEFAULT_ADDRESSES.billingProtocol
+    );
+}

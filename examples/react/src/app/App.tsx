@@ -14,7 +14,7 @@ import {
 // APPLICATION
 ////////////////////////////////////////////////////////////
 
-export default function App() {
+export  function App() {
     const [
         subscription,
 

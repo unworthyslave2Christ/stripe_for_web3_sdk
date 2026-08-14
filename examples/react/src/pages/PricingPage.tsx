@@ -3,8 +3,6 @@ import {
 } from "react";
 
 import {
-    useAccount,
-
     usePublicClient,
 
     useWalletClient,
@@ -19,6 +17,18 @@ import {
 } from "../components/wallet/WalletButton";
 
 import {
+    CustomerOnboardingModal,
+} from "../components/customer/CustomerOnboardingModal";
+
+import {
+    CustomerAccountCard,
+} from "../components/customer/CustomerAccountCard";
+
+import {
+    createCustomerSDK,
+} from "../billing/sdk";
+
+import {
     mockMerchant,
 } from "../data/mockMerchant";
 
@@ -26,13 +36,20 @@ import {
     subscribeToPlan,
 } from "../billing/subscribe";
 
+import {
+    usePrivy,
+} from "@privy-io/react-auth";
+
 ////////////////////////////////////////////////////////////
 // PROPS
 ////////////////////////////////////////////////////////////
 
 interface PricingPageProps {
     onSubscribed:
-        (subscription: unknown) => void;
+        (
+            subscription:
+                unknown,
+        ) => void;
 }
 
 ////////////////////////////////////////////////////////////
@@ -42,16 +59,28 @@ interface PricingPageProps {
 export function PricingPage({
     onSubscribed,
 }: PricingPageProps) {
+
     const {
-        isConnected,
-    } = useAccount();
+        ready,
+
+        authenticated,
+    } = usePrivy();
+
+    const isConnected =
+        ready &&
+        authenticated;
 
     const {
         data: walletClient,
-    } = useWalletClient();
+    } =
+        useWalletClient();
 
     const publicClient =
         usePublicClient();
+
+    ////////////////////////////////////////////////////////////
+    // STATE
+    ////////////////////////////////////////////////////////////
 
     const [
         loadingPlanId,
@@ -71,12 +100,61 @@ export function PricingPage({
             null,
         );
 
+    const [
+        onboardingOpen,
+
+        setOnboardingOpen,
+    ] =
+        useState(false);
+
+    const [
+        customer,
+
+        setCustomer,
+    ] =
+        useState<any | null>(
+            null,
+        );
+
+    const [
+        pendingPlanId,
+
+        setPendingPlanId,
+    ] =
+        useState<number | null>(
+            null,
+        );
+
+    ////////////////////////////////////////////////////////////
+    // CUSTOMER SDK
+    ////////////////////////////////////////////////////////////
+
+    const customerSDK =
+        walletClient &&
+        publicClient
+            ? createCustomerSDK({
+                  walletClient,
+
+                  publicClient,
+              })
+            : null;
+
+    ////////////////////////////////////////////////////////////
+    // SUBSCRIBE
+    ////////////////////////////////////////////////////////////
+
     async function handleSubscribe(
         planId: number,
     ) {
+
         setError(null);
 
+        ////////////////////////////////////////////////////////
+        // WALLET
+        ////////////////////////////////////////////////////////
+
         if (!walletClient) {
+
             setError(
                 "Please connect your wallet first.",
             );
@@ -84,7 +162,12 @@ export function PricingPage({
             return;
         }
 
+        ////////////////////////////////////////////////////////
+        // PUBLIC CLIENT
+        ////////////////////////////////////////////////////////
+
         if (!publicClient) {
+
             setError(
                 "Blockchain client is unavailable.",
             );
@@ -93,9 +176,14 @@ export function PricingPage({
         }
 
         try {
+
             setLoadingPlanId(
                 planId,
             );
+
+            ////////////////////////////////////////////////////
+            // ATTEMPT SUBSCRIPTION
+            ////////////////////////////////////////////////////
 
             const result =
                 await subscribeToPlan({
@@ -106,26 +194,153 @@ export function PricingPage({
                     planId,
                 });
 
+            ////////////////////////////////////////////////////
+            // CUSTOMER DOES NOT EXIST
+            ////////////////////////////////////////////////////
+
+            if (
+                result.status ===
+                "customer-required"
+            ) {
+
+                setPendingPlanId(
+                    planId,
+                );
+
+                setOnboardingOpen(
+                    true,
+                );
+
+                return;
+            }
+
+            ////////////////////////////////////////////////////
+            // SUBSCRIPTION CREATED
+            ////////////////////////////////////////////////////
+
             onSubscribed(
-                result,
+                result.subscription,
             );
+
         } catch (error) {
+
             setError(
                 error instanceof Error
                     ? error.message
                     : "Subscription failed.",
             );
+
         } finally {
+
             setLoadingPlanId(
                 null,
             );
         }
     }
 
+    ////////////////////////////////////////////////////////////
+    // CUSTOMER CREATED
+    ////////////////////////////////////////////////////////////
+
+    function handleCustomerCreated(
+        result: any,
+    ) {
+
+        ////////////////////////////////////////////////////////
+        // CUSTOMER RESULT
+        ////////////////////////////////////////////////////////
+
+        const createdCustomer =
+            result?.customer ??
+            result;
+
+        setCustomer(
+            createdCustomer,
+        );
+
+        setOnboardingOpen(
+            false,
+        );
+
+        ////////////////////////////////////////////////////////
+        // IMPORTANT:
+        //
+        // Do NOT automatically subscribe here.
+        //
+        // The customer should see that their account was
+        // successfully created and deliberately click
+        // Subscribe again.
+        ////////////////////////////////////////////////////////
+
+        setPendingPlanId(
+            null,
+        );
+
+        setError(null);
+    }
+
+    ////////////////////////////////////////////////////////////
+    // NOT CONNECTED
+    ////////////////////////////////////////////////////////////
+
+    if (!isConnected) {
+
+        return (
+            <main className="pricing-page">
+
+                <header className="hero">
+
+                    <div>
+
+                        <p className="eyebrow">
+                            ACMEFLOW
+                        </p>
+
+                        <h1>
+                            Automate your team's work.
+                        </h1>
+
+                        <p>
+                            Powerful workflow automation
+                            without the blockchain headache.
+                        </p>
+
+                    </div>
+
+                    <WalletButton />
+
+                </header>
+
+                <section className="wallet-required">
+
+                    <h2>
+                        Connect your wallet
+                    </h2>
+
+                    <p>
+                        Connect your wallet to view and
+                        activate an ACMEFLOW subscription.
+                    </p>
+
+                    <WalletButton />
+
+                </section>
+
+            </main>
+        );
+    }
+
+    ////////////////////////////////////////////////////////////
+    // RENDER
+    ////////////////////////////////////////////////////////////
+
     return (
         <main className="pricing-page">
+
             <header className="hero">
+
                 <div>
+
                     <p className="eyebrow">
                         ACMEFLOW
                     </p>
@@ -138,10 +353,37 @@ export function PricingPage({
                         Powerful workflow automation
                         without the blockchain headache.
                     </p>
+
                 </div>
 
                 <WalletButton />
+
             </header>
+
+            {customer && (
+                <section className="customer-ready-section">
+
+                    <CustomerAccountCard
+                        customer={
+                            customer
+                        }
+                    />
+
+                    <div className="customer-ready-message">
+
+                        <strong>
+                            Your account is ready.
+                        </strong>
+
+                        <span>
+                            Choose a plan below to activate
+                            your ACMEFLOW subscription.
+                        </span>
+
+                    </div>
+
+                </section>
+            )}
 
             {error && (
                 <div className="error-message">
@@ -150,6 +392,7 @@ export function PricingPage({
             )}
 
             <section>
+
                 <h2>
                     Choose your plan
                 </h2>
@@ -158,17 +401,53 @@ export function PricingPage({
                     plans={
                         mockMerchant.plans
                     }
+
                     connected={
                         isConnected
                     }
+
                     loadingPlanId={
                         loadingPlanId
                     }
+
                     onSubscribe={
                         handleSubscribe
                     }
                 />
+
             </section>
+
+            {customerSDK && (
+                <CustomerOnboardingModal
+                    client={
+                        customerSDK
+                    }
+
+                    open={
+                        onboardingOpen
+                    }
+
+                    onCreated={
+                        handleCustomerCreated
+                    }
+
+                    onClose={() => {
+
+                        setOnboardingOpen(
+                            false,
+                        );
+
+                        setPendingPlanId(
+                            null,
+                        );
+
+                        setLoadingPlanId(
+                            null,
+                        );
+                    }}
+                />
+            )}
+
         </main>
     );
 }

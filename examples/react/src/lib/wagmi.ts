@@ -1,27 +1,44 @@
-import {
-    getDefaultConfig,
-} from "@rainbow-me/rainbowkit";
+// import {
+//     getDefaultConfig,
+// } from "@rainbow-me/rainbowkit";
 
-import {
-    arbitrumSepolia,
-} from "wagmi/chains";
+// import {
+//     arbitrumSepolia,
+// } from "wagmi/chains";
 
-////////////////////////////////////////////////////////////
-// WALLET CONFIGURATION
-////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////
+// // WALLET CONFIGURATION
+// ////////////////////////////////////////////////////////////
 
-export const wagmiConfig =
-    getDefaultConfig({
-        appName:
-            "AcmeFlow",
+// export const wagmiConfig =
+//     getDefaultConfig({
+//         appName:
+//             "AcmeFlow",
 
-        projectId:
-            import.meta.env
-                .VITE_WALLETCONNECT_PROJECT_ID,
+//         projectId:
+//             import.meta.env
+//                 .VITE_WALLETCONNECT_PROJECT_ID,
 
-        chains: [
-            arbitrumSepolia,
-        ],
+//         chains: [
+//             arbitrumSepolia,
+//         ],
 
-        ssr: false,
-    });
+//         ssr: false,
+//     });
+
+
+import { createConfig } from "@privy-io/wagmi";
+
+import { arbitrumSepolia } from "viem/chains";
+import { http } from "wagmi";
+
+export const wagmiConfig = createConfig({
+    chains: [
+        arbitrumSepolia,
+    ],
+
+    transports: {
+        [arbitrumSepolia.id]:
+            http(),
+    },
+});

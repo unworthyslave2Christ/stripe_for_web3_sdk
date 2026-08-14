@@ -1,53 +1,54 @@
 import React from "react";
-
 import ReactDOM from "react-dom/client";
 
 import {
-    QueryClient,
-    QueryClientProvider,
-} from "@tanstack/react-query";
+    PrivyProvider,
+} from "@privy-io/react-auth";
 
 import {
     WagmiProvider,
-} from "wagmi";
+} from "@privy-io/wagmi";
 
 import {
-    RainbowKitProvider,
-} from "@rainbow-me/rainbowkit";
+    QueryClientProvider,
+} from "@tanstack/react-query";
 
-import "@rainbow-me/rainbowkit/styles.css";
+import { App } from "./app/App";
 
+import { privyConfig } from "./lib/privy";
 import { wagmiConfig } from "./lib/wagmi";
-
-import App from "./app/App";
+import { queryClient } from "./lib/queryClient";
 
 import "./index.css";
-
-////////////////////////////////////////////////////////////
-// QUERY CLIENT
-////////////////////////////////////////////////////////////
-
-const queryClient =
-    new QueryClient();
-
-////////////////////////////////////////////////////////////
-// APPLICATION
-////////////////////////////////////////////////////////////
 
 ReactDOM.createRoot(
     document.getElementById("root")!,
 ).render(
     <React.StrictMode>
-        <WagmiProvider
-            config={wagmiConfig}
+
+        <PrivyProvider
+            appId={
+                import.meta.env
+                    .VITE_PRIVY_APP_ID
+            }
+            config={privyConfig}
         >
+
             <QueryClientProvider
                 client={queryClient}
             >
-                <RainbowKitProvider>
+
+                <WagmiProvider
+                    config={wagmiConfig}
+                >
+
                     <App />
-                </RainbowKitProvider>
+
+                </WagmiProvider>
+
             </QueryClientProvider>
-        </WagmiProvider>
+
+        </PrivyProvider>
+
     </React.StrictMode>,
 );
