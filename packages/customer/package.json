@@ -56,7 +56,7 @@
     "@zerodev/ecdsa-validator": "^5.4.9",
     "@zerodev/sdk": "^5.5.10",
     "permissionless": "^0.1.49",
-    "viem": "^2.55.11"
+    "viem": "2.55.11"
   },
   "dependencies": {
     "@stripe-for-web3/core": "file:..\\core\\stripe-for-web3-core-0.2.41.tgz",
@@ -68,7 +68,7 @@
     "eslint": "^9.34.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">=20"
