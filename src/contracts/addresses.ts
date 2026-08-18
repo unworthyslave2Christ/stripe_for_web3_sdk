@@ -6,5 +6,5 @@ export interface StripeForWeb3Addresses {
 
 export const defaultAddresses: StripeForWeb3Addresses = {
     billingProtocol:
-        process.env.BILLING_PROTOCOL_ADDRESS as Address,
+        "https://rpc.zerodev.app/api/v3/a26a0058-c9c3-4c35-a01c-f5f76aae4d33/chain/421614" as Address,
 };

@@ -39,6 +39,8 @@ import {
 import {
     usePrivy,
 } from "@privy-io/react-auth";
+import { useCustomer } from "../customer/useCustomer";
+import { CustomerStatus } from "../components/customer/CustomerStatus";
 
 ////////////////////////////////////////////////////////////
 // PROPS
@@ -59,6 +61,9 @@ interface PricingPageProps {
 export function PricingPage({
     onSubscribed,
 }: PricingPageProps) {
+
+    const customerSmartAccountStatus =
+    useCustomer();
 
     const {
         ready,
@@ -311,20 +316,6 @@ export function PricingPage({
 
                 </header>
 
-                <section className="wallet-required">
-
-                    <h2>
-                        Connect your wallet
-                    </h2>
-
-                    <p>
-                        Connect your wallet to view and
-                        activate an ACMEFLOW subscription.
-                    </p>
-
-                    <WalletButton />
-
-                </section>
 
             </main>
         );
@@ -359,6 +350,21 @@ export function PricingPage({
                 <WalletButton />
 
             </header>
+            {customerSmartAccountStatus &&    
+                <CustomerStatus
+                    status={
+                        customerSmartAccountStatus.status
+                    }
+
+                    customerWallet={
+                        customerSmartAccountStatus.customerWallet
+                    }
+
+                    address={
+                        customerSmartAccountStatus.address
+                    }
+                />
+            }
 
             {customer && (
                 <section className="customer-ready-section">

@@ -687,3 +687,651 @@ button {
 
     color: #64748b;
 }
+
+
+/* ////////////////////////////////////////////////////////////
+// CUSTOMER ONBOARDING MODAL
+//////////////////////////////////////////////////////////// */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: rgba(15, 23, 42, 0.45);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ////////////////////////////////////////////////////////////
+// MODAL
+//////////////////////////////////////////////////////////// */
+
+.customer-modal {
+    width: min(100%, 480px);
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 24px 60px rgba(15, 23, 42, 0.18),
+        0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* ////////////////////////////////////////////////////////////
+// HEADER
+//////////////////////////////////////////////////////////// */
+
+.customer-modal-header {
+    padding: 32px 32px 24px;
+}
+
+.customer-modal-header .eyebrow {
+    margin: 0 0 10px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.16em;
+
+    text-transform: uppercase;
+}
+
+.customer-modal-header h2 {
+    margin: 0;
+
+    color: #111827;
+
+    font-size: 28px;
+
+    line-height: 1.15;
+
+    letter-spacing: -0.03em;
+}
+
+.customer-modal-header p:not(.eyebrow) {
+    margin: 14px 0 0;
+
+    color: #64748b;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+}
+
+/* ////////////////////////////////////////////////////////////
+// FORM
+//////////////////////////////////////////////////////////// */
+
+.customer-modal form {
+    padding: 0 32px 28px;
+}
+
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #334155;
+
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+.form-field input {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 12px 14px;
+
+    color: #111827;
+
+    background: #ffffff;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    font-family: inherit;
+
+    font-size: 15px;
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.form-field input::placeholder {
+    color: #94a3b8;
+}
+
+.form-field input:focus {
+    border-color: #111827;
+
+    box-shadow:
+        0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.form-field input:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.6;
+
+    background: #f8fafc;
+}
+
+/* ////////////////////////////////////////////////////////////
+// ERROR
+//////////////////////////////////////////////////////////// */
+
+.customer-modal .error-message {
+    margin-bottom: 18px;
+
+    padding: 11px 13px;
+
+    color: #b91c1c;
+
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    line-height: 1.45;
+}
+
+/* ////////////////////////////////////////////////////////////
+// ACTIONS
+//////////////////////////////////////////////////////////// */
+
+.customer-modal-actions {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 24px;
+}
+
+.customer-modal-actions button {
+    min-height: 42px;
+
+    padding: 0 17px;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 120ms ease,
+        background 120ms ease,
+        border-color 120ms ease,
+        opacity 120ms ease;
+}
+
+.customer-modal-actions button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.customer-modal-actions button:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.55;
+}
+
+/* ////////////////////////////////////////////////////////////
+// SECONDARY BUTTON
+//////////////////////////////////////////////////////////// */
+
+.secondary-button {
+    color: #334155;
+
+    background: #ffffff;
+
+    border: 1px solid #d1d5db;
+}
+
+.secondary-button:hover:not(:disabled) {
+    background: #f8fafc;
+
+    border-color: #cbd5e1;
+}
+
+/* ////////////////////////////////////////////////////////////
+// PRIMARY BUTTON
+//////////////////////////////////////////////////////////// */
+
+.primary-button {
+    color: #ffffff;
+
+    background: #111827;
+
+    border: 1px solid #111827;
+}
+
+.primary-button:hover:not(:disabled) {
+    background: #1f2937;
+}
+
+/* ////////////////////////////////////////////////////////////
+// POWERED BY FOOTER
+//////////////////////////////////////////////////////////// */
+
+.customer-modal-footer {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 18px 32px 20px;
+
+    background: #f8fafc;
+
+    border-top: 1px solid #eef2f7;
+
+    text-align: center;
+}
+
+.powered-by-mark {
+    display: flex;
+
+    align-items: baseline;
+
+    justify-content: center;
+
+    gap: 5px;
+}
+
+.powered-by-label {
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    font-weight: 500;
+
+    letter-spacing: 0.02em;
+}
+
+.powered-by-brand {
+    color: #475569;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.01em;
+}
+
+.customer-modal-footer-text {
+    margin: 5px 0 0;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    line-height: 1.45;
+}
+
+/* ////////////////////////////////////////////////////////////
+// MOBILE
+//////////////////////////////////////////////////////////// */
+
+@media (max-width: 520px) {
+
+    .modal-backdrop {
+        padding: 16px;
+    }
+
+    .customer-modal {
+        border-radius: 16px;
+    }
+
+    .customer-modal-header {
+        padding: 26px 22px 20px;
+    }
+
+    .customer-modal-header h2 {
+        font-size: 24px;
+    }
+
+    .customer-modal form {
+        padding: 0 22px 24px;
+    }
+
+    .customer-modal-footer {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .customer-modal-actions {
+        flex-direction: column-reverse;
+
+        align-items: stretch;
+    }
+
+    .customer-modal-actions button {
+        width: 100%;
+    }
+}
+
+
+.customer-status {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin: 2rem 0;
+
+    padding: 1.5rem;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 8px 30px rgba(15, 23, 42, 0.06);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.customer-status:hover {
+    border-color: #d1d5db;
+
+    box-shadow:
+        0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+
+
+.customer-status-heading {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 1.5rem;
+
+    margin-bottom: 0.75rem;
+}
+
+
+.customer-status-eyebrow {
+    margin: 0 0 0.35rem;
+
+    font-size: 0.7rem;
+
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    text-transform: uppercase;
+
+    color: #6b7280;
+}
+
+
+.customer-status h3 {
+    margin: 0;
+
+    font-size: 1.15rem;
+
+    line-height: 1.4;
+
+    font-weight: 650;
+
+    color: #111827;
+}
+
+
+.customer-status > p {
+    margin: 0.5rem 0 0;
+
+    max-width: 680px;
+
+    font-size: 0.92rem;
+
+    line-height: 1.6;
+
+    color: #6b7280;
+}
+
+
+.customer-status-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    padding: 0.35rem 0.7rem;
+
+    border-radius: 999px;
+
+    background: #f3f4f6;
+
+    color: #4b5563;
+
+    font-size: 0.72rem;
+
+    font-weight: 650;
+
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+
+.customer-status-badge-ready {
+    background: #ecfdf5;
+
+    color: #047857;
+}
+
+
+
+.customer-status-ready {
+    border-color: #d1fae5;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f8fffc 100%
+        );
+}
+
+
+.customer-status-ready:hover {
+    border-color: #a7f3d0;
+}
+
+
+
+.customer-smart-account {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    margin-top: 1.25rem;
+
+    padding: 0.85rem 1rem;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+
+    background: #f9fafb;
+}
+
+
+.customer-smart-account span {
+    font-size: 0.78rem;
+
+    font-weight: 600;
+
+    color: #6b7280;
+}
+
+
+.customer-smart-account code {
+    max-width: 70%;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    font-size: 0.78rem;
+
+    color: #111827;
+}
+
+
+
+.customer-wallet-address {
+    display: block;
+
+    width: fit-content;
+
+    max-width: 100%;
+
+    box-sizing: border-box;
+
+    margin-top: 1rem;
+
+    padding: 0.65rem 0.8rem;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 8px;
+
+    background: #f9fafb;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    font-size: 0.76rem;
+
+    color: #4b5563;
+}
+
+
+
+.customer-status-error {
+    border-color: #fecaca;
+
+    background: #fffafa;
+}
+
+
+.customer-status-error .customer-status-eyebrow {
+    color: #b91c1c;
+}
+
+
+.customer-status-error h3 {
+    color: #991b1b;
+}
+
+
+@media (max-width: 640px) {
+
+    .customer-status {
+        padding: 1.15rem;
+
+        margin: 1.5rem 0;
+    }
+
+    .customer-status-heading {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 0.75rem;
+    }
+
+    .customer-smart-account {
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+    .customer-smart-account code {
+        max-width: 100%;
+
+        width: 100%;
+    }
+
+    .customer-wallet-address {
+        width: 100%;
+    }
+}

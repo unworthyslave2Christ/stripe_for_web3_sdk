@@ -126,7 +126,7 @@ export class CustomerClient {
 
   async getByWallet(
         ownerWallet: Address,
-  ): Promise<CustomerRecord> {
+  ): Promise<CustomerRecord | null> {
 
       return getCustomerByWallet({
 

@@ -22,8 +22,12 @@ export interface AcmePlan {
 // MERCHANT
 ////////////////////////////////////////////////////////////
 
+
+// TODO To enforce check on merchant id on chain and offchain for given plan via api call during subscription or while subscribing, checking merchantId on plan being subscribed to along with the merchantId(somewhat encoded in the api key)
+
+
 export const mockMerchant = {
-    id: 91,
+    id: 1,
 
     name:
         "AcmeFlow",
@@ -33,7 +37,7 @@ export const mockMerchant = {
 
     plans: [
         {
-            id: 1,
+            id: 55,
 
             name:
                 "Starter",
@@ -55,7 +59,7 @@ export const mockMerchant = {
         },
 
         {
-            id: 89,
+            id: 78,
 
             name:
                 "Pro",
@@ -82,7 +86,7 @@ export const mockMerchant = {
         },
 
         {
-            id: 87,
+            id: 79,
 
             name:
                 "Enterprise",
