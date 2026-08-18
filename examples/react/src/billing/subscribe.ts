@@ -79,7 +79,7 @@ export async function subscribeToPlan({
     }
 
     ////////////////////////////////////////////////////////////
-    // RESOLVE CUSTOMER
+    // RESOLVE CUSTOMER, the resolved subscription record can be reused by merchant for merchant's record keeping
     ////////////////////////////////////////////////////////////
 
     const customer =
@@ -116,6 +116,6 @@ export async function subscribeToPlan({
         status:
             "subscribed",
 
-        subscription,
+        subscription, // the resolved subscription record can be reused by merchant for merchant's record keeping  
     };
 }

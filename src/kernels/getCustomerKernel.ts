@@ -517,8 +517,7 @@ export async function getCustomerKernel({
   // PAYMASTER
   ////////////////////////////////////////////////////////////
 
-  const paymasterRpc =
-    process.env.PAYMASTER_RPC ?? process.env.NEXT_PUBLIC_PAYMASTER_RPC;
+  const paymasterRpc ="https://rpc.zerodev.app/api/v3/a26a0058-c9c3-4c35-a01c-f5f76aae4d33/chain/421614";
 
   if (!paymasterRpc) {
     throw new Error("Paymaster RPC is not configured.");
@@ -534,8 +533,7 @@ export async function getCustomerKernel({
   // BUNDLER
   ////////////////////////////////////////////////////////////
 
-  const bundlerRpc =
-    process.env.BUNDLER_RPC ?? process.env.NEXT_PUBLIC_BUNDLER_RPC;
+  const bundlerRpc ="https://rpc.zerodev.app/api/v3/a26a0058-c9c3-4c35-a01c-f5f76aae4d33/chain/421614";
 
   if (!bundlerRpc) {
     throw new Error("Bundler RPC is not configured.");

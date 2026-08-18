@@ -1,6 +1,6 @@
 {
   "name": "@stripe-for-web3/core",
-  "version": "0.2.41",
+  "version": "0.2.42",
   "description": "Core protocol infrastructure and shared TypeScript primitives for the Stripe for Web3 SDK.",
 
   "license": "MIT",

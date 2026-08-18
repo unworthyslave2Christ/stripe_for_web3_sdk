@@ -135,8 +135,7 @@ export interface MerchantKernelResult {
 
 function createPaymasterClient() {
 
-    const rpc =
-        process.env.PAYMASTER_RPC;
+    const rpc = "https://rpc.zerodev.app/api/v3/a26a0058-c9c3-4c35-a01c-f5f76aae4d33/chain/421614";
 
     if (!rpc) {
 
@@ -236,8 +235,7 @@ export async function createMerchantKernel({
             chain,
 
             bundlerTransport:
-                http(
-                    process.env.BUNDLER_RPC!,
+                http("https://rpc.zerodev.app/api/v3/a26a0058-c9c3-4c35-a01c-f5f76aae4d33/chain/421614",
                 ),
 
             paymaster: {

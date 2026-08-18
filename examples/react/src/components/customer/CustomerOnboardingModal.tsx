@@ -1,6 +1,5 @@
 import {
     type FormEvent,
-
     useState,
 } from "react";
 
@@ -8,9 +7,6 @@ import type {
     CustomerClient,
 } from "@stripe-for-web3/customer";
 
-////////////////////////////////////////////////////////////
-// PROPS
-////////////////////////////////////////////////////////////
 
 interface CustomerOnboardingModalProps {
     client: CustomerClient;
@@ -26,9 +22,6 @@ interface CustomerOnboardingModalProps {
         () => void;
 }
 
-////////////////////////////////////////////////////////////
-// MODAL
-////////////////////////////////////////////////////////////
 
 export function CustomerOnboardingModal({
     client,
@@ -74,10 +67,7 @@ export function CustomerOnboardingModal({
         return null;
     }
 
-    ////////////////////////////////////////////////////////////
-    // SUBMIT
-    ////////////////////////////////////////////////////////////
-
+   
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>,
     ) {
@@ -104,10 +94,7 @@ export function CustomerOnboardingModal({
         try {
             setLoading(true);
 
-            ////////////////////////////////////////////////////
-            // CUSTOMER REGISTRATION
-            ////////////////////////////////////////////////////
-
+          
             const result =
                 await client.register({
                     displayName:
@@ -117,10 +104,7 @@ export function CustomerOnboardingModal({
                         email.trim(),
                 });
 
-            ////////////////////////////////////////////////////
-            // RETURN CUSTOMER TO PRICING PAGE
-            ////////////////////////////////////////////////////
-
+           
             onCreated(result);
 
         } catch (error) {
@@ -128,7 +112,7 @@ export function CustomerOnboardingModal({
             setError(
                 error instanceof Error
                     ? error.message
-                    : "Unable to create your customer account.",
+                    : "Unable to create your smart account.",
             );
 
         } finally {
@@ -136,10 +120,7 @@ export function CustomerOnboardingModal({
         }
     }
 
-    ////////////////////////////////////////////////////////////
-    // RENDER
-    ////////////////////////////////////////////////////////////
-
+    
     return (
         <div
             className="modal-backdrop"
@@ -152,25 +133,26 @@ export function CustomerOnboardingModal({
                 aria-labelledby="customer-onboarding-title"
             >
 
+                
                 <div className="customer-modal-header">
 
                     <p className="eyebrow">
                         ACMEFLOW
                     </p>
 
-                    <h2
-                        id="customer-onboarding-title"
-                    >
-                        Create your customer account
+                    <h2 id="customer-onboarding-title">
+                        Create your smart account
                     </h2>
 
                     <p>
-                        Your account is required before
-                        you can activate a subscription.
+                        Stripe for Web3 will create your
+                        smart account so you can activate
+                        and manage your subscription securely.
                     </p>
 
                 </div>
 
+                
                 <form
                     onSubmit={
                         handleSubmit
@@ -236,6 +218,7 @@ export function CustomerOnboardingModal({
                         </div>
                     )}
 
+                  
                     <div className="customer-modal-actions">
 
                         <button
@@ -259,13 +242,33 @@ export function CustomerOnboardingModal({
                             className="primary-button"
                         >
                             {loading
-                                ? "Creating account..."
-                                : "Create customer account"}
+                                ? "Creating smart account..."
+                                : "Create smart account"}
                         </button>
 
                     </div>
 
                 </form>
+
+               
+                <div className="customer-modal-footer">
+
+                    <div className="powered-by-mark">
+                        <span className="powered-by-label">
+                            Powered by
+                        </span>
+
+                        <span className="powered-by-brand">
+                            Stripe for Web3
+                        </span>
+                    </div>
+
+                    <p className="customer-modal-footer-text">
+                        Secure account abstraction for
+                        decentralized subscriptions.
+                    </p>
+
+                </div>
 
             </div>
         </div>

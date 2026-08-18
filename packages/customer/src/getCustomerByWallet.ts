@@ -29,7 +29,7 @@ export interface GetCustomerByWalletParams {
 export async function getCustomerByWallet({
     client,
     ownerWallet,
-}: GetCustomerByWalletParams): Promise<CustomerRecord> {
+}: GetCustomerByWalletParams): Promise<CustomerRecord | null> {
 
     ////////////////////////////////////////////////////////////
     // CONFIGURATION
@@ -66,9 +66,9 @@ export async function getCustomerByWallet({
     ////////////////////////////////////////////////////////////
 
     if (response.status === 404) {
-        throw new Error(
-            "CUSTOMER_NOT_FOUND",
-        );
+        if (response.status === 404) {
+            return null;
+        }
     }
 
     ////////////////////////////////////////////////////////////
